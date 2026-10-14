@@ -1,0 +1,173 @@
+version: "3"
+
+vars:
+  BACKEND_DIR: backend
+  FRONTEND_DIR: frontend
+
+tasks:
+
+  # ── 默认 ──
+  default:
+    desc: 启动全部服务（后端 + 前端）
+    deps:
+      - backend:dev
+      - frontend:dev
+
+  # ── 后端 ──
+
+  backend:install:
+    desc: 安装后端依赖
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - uv sync
+
+  backend:dev:
+    desc: 启动后端开发服务器（热重载）
+    dir: "{{.BACKEND_DIR}}"
+    cmd: uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+  backend:start:
+    desc: 启动后端生产服务器
+    dir: "{{.BACKEND_DIR}}"
+    cmd: uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  backend:lint:
+    desc: 运行 ruff 代码检查
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - uv run ruff check app/
+      - uv run ruff format app/ --check
+
+  backend:format:
+    desc: 自动格式化代码
+    dir: "{{.BACKEND_DIR}}"
+    cmd: uv run ruff format app/
+
+  backend:check:
+    desc: 类型检查
+    dir: "{{.BACKEND_DIR}}"
+    cmd: uv run python -c "import app.main; print('OK')"
+
+  backend:migrate:
+    desc: 执行数据库迁移
+    dir: "{{.BACKEND_DIR}}"
+    cmd: alembic upgrade head
+
+  backend:migration:
+    desc: 创建新的数据库迁移
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - uv run alembic revision --autogenerate -m "{{.name | default 'auto'}}"
+
+  backend:test:
+    desc: 运行后端测试
+    dir: "{{.BACKEND_DIR}}"
+    cmd: uv run pytest tests/
+
+  backend:seed:
+    desc: 初始化知识库种子数据
+    dir: "{{.BACKEND_DIR}}"
+    cmd: uv run python -c "import asyncio; from app.services.knowledge_base import knowledge_base; asyncio.run(knowledge_base.initialize()); print('Knowledge base initialized')"
+
+  backend:shell:
+    desc: 打开 Python shell（带应用上下文）
+    dir: "{{.BACKEND_DIR}}"
+    cmd: uv run python -c "from app.models import User, Resume, Job, MatchReport; print('SmartHire shell ready')"
+
+  # ── 前端 ──
+
+  frontend:install:
+    desc: 安装前端依赖
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - npm install
+
+  frontend:dev:
+    desc: 启动前端开发服务器
+    dir: "{{.FRONTEND_DIR}}"
+    cmd: npm run dev
+
+  frontend:build:
+    desc: 构建前端生产包
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - npm run build
+
+  frontend:preview:
+    desc: 预览生产构建
+    dir: "{{.FRONTEND_DIR}}"
+    cmd: npm run preview
+
+  frontend:lint:
+    desc: TypeScript 类型检查
+    dir: "{{.FRONTEND_DIR}}"
+    cmd: npx tsc --noEmit
+
+  frontend:check:
+    desc: 完整前端检查（类型 + 构建）
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - npx tsc --noEmit
+      - npm run build
+
+  # ── 通用 ──
+
+  install:
+    desc: 安装所有依赖
+    cmds:
+      - task: backend:install
+      - task: frontend:install
+
+  lint:
+    desc: 运行所有代码检查
+    cmds:
+      - task: backend:lint
+      - task: frontend:lint
+
+  check:
+    desc: 运行所有检查（类型检查 + 构建）
+    cmds:
+      - task: backend:check
+      - task: frontend:check
+
+  build:
+    desc: 构建所有服务
+    cmds:
+      - task: backend:check
+      - task: frontend:build
+
+  test:
+    desc: 运行所有测试
+    cmds:
+      - task: backend:test
+
+  migrate:
+    desc: 执行所有数据库迁移
+    cmds:
+      - task: backend:migrate
+
+  clean:
+    desc: 清理缓存和构建产物
+    cmds:
+      - rm -rf {{.BACKEND_DIR}}/__pycache__
+      - rm -rf {{.FRONTEND_DIR}}/dist
+      - rm -rf {{.FRONTEND_DIR}}/node_modules/.vite
+
+  docker:up:
+    desc: 启动 Docker 服务
+    cmd: docker compose up -d --build
+
+  docker:down:
+    desc: 停止 Docker 服务
+    cmd: docker compose down
+
+  docker:logs:
+    desc: 查看 Docker 日志
+    cmd: docker compose logs -f
+
+  ps:
+    desc: 显示服务地址
+    cmds:
+      - 'Write-Output "Frontend - http://localhost:5173"'
+      - 'Write-Output "Backend  - http://localhost:8000"'
+      - 'Write-Output "API Docs - http://localhost:8000/docs"'
