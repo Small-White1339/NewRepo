@@ -1,0 +1,18 @@
+digraph Workflow {
+  graph [rankdir=TB, bgcolor="white", fontname="Microsoft YaHei", fontsize=20, label="F20 Git 配置管理与交付流程", labelloc=t, pad=0.4];
+  node [shape=box, style="rounded,filled", fillcolor="#EFF6FF", fontname="Microsoft YaHei", fontsize=15, color="#334155", margin=0.18];
+  edge [fontname="Microsoft YaHei", fontsize=12, color="#475569"];
+  A [label="本地修改代码 / 文档 / 图源"];
+  B [label="核对变更范围与代码基线"];
+  C [label="运行适用验证\n代码测试 或 文档与图源检查"];
+  D [label="扫描待提交内容\n排除 .env、数据库、uploads、本地日志"];
+  E [label="暂存并复查 git diff --cached"];
+  F [label="本地提交 git commit"];
+  G [label="拉取并核对远端状态\n正常推送 git push，不强制覆盖"];
+  H [label="核对远端 SHA 与工作区状态"];
+  A -> B -> C -> D -> E -> F -> G -> H;
+  X [fillcolor="#FEFCE8", label="版本化内容\n源码、测试、迁移、锁文件、文档、图源与导出图"];
+  Y [fillcolor="#FEFCE8", label="本机内容\n真实密钥、业务数据库、简历文件、工具缓存\n不纳入 Git"];
+  D -> X [style=dashed, label="允许"];
+  D -> Y [style=dashed, label="排除"];
+}

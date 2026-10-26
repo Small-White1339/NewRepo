@@ -1,0 +1,33 @@
+@startuml
+!include _style.puml
+title F15 求职记录手动状态图
+state "SAVED 已收藏" as Saved
+state "APPLIED 已投递" as Applied
+state "INTERVIEW 面试中" as Interview
+state "OFFER 收到录用" as Offer
+state "ARCHIVED 已归档" as Archived
+state "用户选择 stage\nPUT /career/saved/{job_id}" as Choice <<choice>>
+[*] --> Choice : 新建记录，默认 SAVED
+Saved --> Choice : 修改进度
+Applied --> Choice : 修改进度
+Interview --> Choice : 修改进度
+Offer --> Choice : 修改进度
+Archived --> Choice : 修改进度
+Choice --> Saved : [stage = SAVED]
+Choice --> Applied : [stage = APPLIED]
+Choice --> Interview : [stage = INTERVIEW]
+Choice --> Offer : [stage = OFFER]
+Choice --> Archived : [stage = ARCHIVED]
+Saved --> [*] : 移除记录
+Applied --> [*] : 移除记录
+Interview --> [*] : 移除记录
+Offer --> [*] : 移除记录
+Archived --> [*] : 移除记录
+note bottom of Choice
+PUT 请求指定有效 stage，持久化个人记录。
+当前实现允许任意有效状态之间切换。
+此处没有强制“收藏→投递→面试→录用”的顺序。
+状态只是本人记录，不是招聘方确认，也不会自动投递。
+end note
+footer UML 状态图 | stage 使用请求模型枚举值校验，数据库字段为字符串
+@enduml

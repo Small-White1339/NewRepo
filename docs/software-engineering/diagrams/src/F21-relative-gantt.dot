@@ -1,0 +1,17 @@
+digraph Schedule {
+  graph [bgcolor="white", label="F21 课程材料完善的相对周甘特图  建议计划 非实际工期记录", labelloc=t, fontname="Microsoft YaHei", fontsize=20, pad=0.4];
+  node [shape=plain, fontname="Microsoft YaHei"];
+  plan [label=<
+    <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="14" COLOR="#CBD5E1">
+      <TR><TD BGCOLOR="#1E3A5F"><FONT COLOR="white">工作包</FONT></TD><TD BGCOLOR="#1E3A5F"><FONT COLOR="white">第 1 周</FONT></TD><TD BGCOLOR="#1E3A5F"><FONT COLOR="white">第 2 周</FONT></TD><TD BGCOLOR="#1E3A5F"><FONT COLOR="white">第 3 周</FONT></TD><TD BGCOLOR="#1E3A5F"><FONT COLOR="white">第 4 周</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT">WP1 需求确认与范围核对</TD><TD BGCOLOR="#93C5FD">进行</TD><TD></TD><TD></TD><TD></TD></TR>
+      <TR><TD ALIGN="LEFT">WP2 图表与详细设计复核</TD><TD BGCOLOR="#93C5FD">进行</TD><TD BGCOLOR="#93C5FD">进行</TD><TD></TD><TD></TD></TR>
+      <TR><TD ALIGN="LEFT">WP3 补充真实调研与可行性</TD><TD BGCOLOR="#93C5FD">进行</TD><TD BGCOLOR="#93C5FD">进行</TD><TD></TD><TD></TD></TR>
+      <TR><TD ALIGN="LEFT">WP4 功能验收与问题修复</TD><TD></TD><TD BGCOLOR="#93C5FD">进行</TD><TD BGCOLOR="#93C5FD">进行</TD><TD></TD></TR>
+      <TR><TD ALIGN="LEFT">WP5 测试、截图与数据量验证</TD><TD></TD><TD></TD><TD BGCOLOR="#93C5FD">进行</TD><TD></TD></TR>
+      <TR><TD ALIGN="LEFT">WP6 30 页以上报告整合</TD><TD></TD><TD BGCOLOR="#93C5FD">进行</TD><TD BGCOLOR="#93C5FD">进行</TD><TD BGCOLOR="#93C5FD">进行</TD></TR>
+      <TR><TD ALIGN="LEFT">WP7 PPT 与答辩排练</TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#93C5FD">进行</TD></TR>
+      <TR><TD ALIGN="LEFT">WP8 最终验收与 Git 归档</TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#93C5FD">进行</TD></TR>
+    </TABLE>
+  >];
+}

@@ -1,0 +1,94 @@
+digraph DFD {
+  graph [rankdir=LR, bgcolor="white", fontname="Microsoft YaHei", fontsize=20, label="F05 一层 DFD  六个业务处理及数据存储\n同编号实体或存储重复绘制，表示同一对象，以减少交叉", labelloc=t, pad=0.4, nodesep=0.4, ranksep=0.75, compound=true];
+  node [fontname="Microsoft YaHei", fontsize=14, shape=box, color="#334155", margin=0.14];
+  edge [fontname="Microsoft YaHei", fontsize=11, color="#475569", arrowsize=0.7];
+  subgraph cluster1 {
+    label="账号认证"; color="#CBD5E1";
+    U1 [label="E1 HR / E2 求职者"];
+    P1 [label="P1 账号认证", style="rounded,filled", fillcolor="#DBEAFE"];
+    D1 [shape=record, label="D1|users"];
+    U1 -> P1 [label="账号资料"];
+    P1 -> U1 [label="认证结果", constraint=false];
+    P1 -> D1 [label="账号记录"];
+    D1 -> P1 [label="身份与角色", constraint=false];
+  }
+  subgraph cluster2 {
+    label="简历管理与解析"; color="#CBD5E1";
+    U2 [label="E1 HR / E2 求职者"];
+    P2 [label="P2 简历管理与解析", style="rounded,filled", fillcolor="#DBEAFE"];
+    D2a [shape=record, label="D2|resumes 及子表"];
+    D6a [shape=record, label="D6|uploads 文件"];
+    AI2 [label="E3 DeepSeek"];
+    U2 -> P2 [label="候选人或个人简历、查询"];
+    P2 -> U2 [label="本人简历与解析结果", constraint=false];
+    P2 -> D2a [label="原文与解析资料"];
+    D2a -> P2 [label="本人简历", constraint=false];
+    P2 -> D6a [label="原文件"];
+    D6a -> P2 [label="预览内容", constraint=false];
+    P2 -> AI2 [label="简历文字"];
+    AI2 -> P2 [label="解析 JSON", constraint=false];
+  }
+  subgraph cluster3 {
+    label="岗位管理与探索"; color="#CBD5E1";
+    U3 [label="E1 HR / E2 求职者"];
+    P3 [label="P3 岗位管理与查询", style="rounded,filled", fillcolor="#DBEAFE"];
+    D3a [shape=record, label="D3|jobs / requirements"];
+    AI3 [label="E3 DeepSeek"];
+    U3 -> P3 [label="HR 岗位资料、查询\n求职者在招岗位查询"];
+    P3 -> U3 [label="本人岗位 / 公开在招岗位", constraint=false];
+    P3 -> D3a [label="岗位与要求"];
+    D3a -> P3 [label="岗位记录", constraint=false];
+    P3 -> AI3 [label="岗位说明"];
+    AI3 -> P3 [label="岗位分析 JSON", constraint=false];
+  }
+  subgraph cluster4 {
+    label="匹配分析与报告"; color="#CBD5E1";
+    U4 [label="E1 HR / E2 求职者"];
+    P4 [label="P4 AI 匹配与报告", style="rounded,filled", fillcolor="#DBEAFE"];
+    D2b [shape=record, label="D2|resumes 及子表"];
+    D3b [shape=record, label="D3|jobs / requirements"];
+    D4 [shape=record, label="D4|match_reports"];
+    AI4 [label="E3 DeepSeek"];
+    U4 -> P4 [label="批量或个人匹配请求\n本人报告查询"];
+    P4 -> U4 [label="招聘报告 / 个人建议报告", constraint=false];
+    D2b -> P4 [label="本人简历原文", constraint=false];
+    D3b -> P4 [label="岗位原文与状态", constraint=false];
+    P4 -> D2b [style=invis]; P4 -> D3b [style=invis];
+    P4 -> D4 [label="报告状态与结果"];
+    D4 -> P4 [label="历史报告", constraint=false];
+    P4 -> AI4 [label="分析输入"];
+    AI4 -> P4 [label="匹配与建议 JSON", constraint=false];
+  }
+  subgraph cluster5 {
+    label="收藏与求职记录"; color="#CBD5E1";
+    U5 [label="E2 求职者"];
+    P5 [label="P5 收藏与求职记录", style="rounded,filled", fillcolor="#DBEAFE"];
+    D3c [shape=record, label="D3|jobs / requirements"];
+    D5 [shape=record, label="D5|saved_jobs"];
+    U5 -> P5 [label="收藏、手动进度、备注"];
+    P5 -> U5 [label="个人求职记录", constraint=false];
+    P5 -> D3c [style=invis];
+    D3c -> P5 [label="岗位状态", constraint=false];
+    P5 -> D5 [label="求职记录"];
+    D5 -> P5 [label="已有记录", constraint=false];
+  }
+  subgraph cluster6 {
+    label="公开资料导入"; color="#CBD5E1";
+    U6 [label="E1 HR"];
+    P6 [label="P6 公开资料导入", style="rounded,filled", fillcolor="#DBEAFE"];
+    LEVER [label="E4 Lever"];
+    REG [label="E5 JSON Resume"];
+    D2c [shape=record, label="D2|resumes 及子表"];
+    D3d [shape=record, label="D3|jobs / requirements"];
+    D6b [shape=record, label="D6|uploads 文件"];
+    U6 -> P6 [label="公开资料查询请求"];
+    P6 -> U6 [label="导入数量与来源状态", constraint=false];
+    P6 -> LEVER [label="岗位查询"];
+    LEVER -> P6 [label="真实岗位与来源链接", constraint=false];
+    P6 -> REG [label="公开履历查询"];
+    REG -> P6 [label="职业资料与来源链接", constraint=false];
+    P6 -> D2c [label="去重公开资料"];
+    P6 -> D3d [label="去重真实岗位"];
+    P6 -> D6b [label="脱敏履历文本"];
+  }
+}

@@ -1,0 +1,37 @@
+@startuml
+!include _style.puml
+title F13 简历照片上传与解析顺序图
+actor "已登录用户" as User
+participant Resumes as UI
+participant "resumes.upload_resume" as API
+participant "parse_resume_file\n工作线程" as Parser
+participant "RapidOCR\n本地模型" as OCR
+collections uploads as Files
+participant "ResumeAnalysisAgent" as Agent
+participant DeepSeek as LLM
+database "业务数据库" as DB
+User -> UI : 选择简历照片
+UI -> API : multipart 文件与登录令牌
+API -> API : 检查文件名、扩展名和 10 MB 限制
+API -> Files : 使用 UUID 文件名保存
+API -> Parser : run_in_threadpool
+Parser -> Parser : 校验真实图片格式与像素上限
+Parser -> OCR : EXIF 校正后的 RGB 像素
+OCR --> Parser : 识别文字
+Parser --> API : raw_text 或解析错误
+alt 图片无效或文字为空
+  API -> Files : 删除本次保存的无效文件
+  API --> UI : 422，不新建简历记录
+else 已获取文字
+  opt 配置了 API Key
+    API -> Agent : resume_text
+    Agent -> LLM : 仅文字，不上传原图片
+    LLM --> Agent : 结构化 JSON 或失败
+    Agent --> API : parsed_data 或可重试错误
+  end
+  API -> DB : PARSED 简历、原文\n有 AI 结果时填充关联资料
+  API --> UI : 201 与处理消息
+  UI --> User : 识别原文、解析资料或 AI 暂不可用提示
+end
+footer UML 顺序图 | AI 失败不会丢失已识别的文字
+@enduml

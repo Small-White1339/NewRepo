@@ -2,6 +2,12 @@
 
 基于 AI Agent 的多智能体协作招聘系统，支持简历解析、岗位需求分析、候选人能力评估及岗位匹配推荐。
 
+## 软件工程课程资料
+
+课程报告、PPT 和答辩使用的材料集中在 **[软件工程资料索引](docs/software-engineering/README.md)**：含课程要求对照、模块职责与代码入口、角色需求、22 张已编号图表、11 张表的字段字典、30 个接口目录、黑盒与白盒测试设计，以及项目管理和报告填写指南。每张图提供可编辑图源、SVG 和 PNG，并注明当前实现、配置方案或建议计划。
+
+[先看模块结构](docs/software-engineering/02-architecture-and-modules.md) · [查看所有图表](docs/software-engineering/README.md#图表目录) · [核对课程要求](docs/software-engineering/00-course-checklist.md)
+
 ## 系统架构
 
 ```
@@ -107,7 +113,7 @@ task frontend:dev   # 前端 http://localhost:5173
 - 注册 / 登录（JWT 认证）
 - 角色：HR（招聘人员）、JOB_SEEKER（求职者）
 - 本地演示账户：`admin / admin`（仅 `SEED_ADMIN=true` 时创建）
-- HR 可管理自己的岗位、上传候选人简历并执行匹配；求职者可管理自己的简历
+- HR 可管理自己的岗位、上传候选人简历并执行匹配；求职者可管理自己的简历、探索在招岗位、获取个人匹配建议、维护收藏与手动求职进度
 
 ### 简历管理
 
@@ -163,7 +169,7 @@ uv run --extra dev pytest tests/
 smarthire/
 ├── backend/
 │   ├── app/
-│   │   ├── agents/          # 4 AI Agent + Orchestrator 编排器
+│   │   ├── agents/          # 5 个业务 Agent 类，每次匹配执行 4 步
 │   │   ├── api/v1/          # RESTful API 端点
 │   │   ├── models/          # SQLAlchemy 2.0 async 模型
 │   │   ├── schemas/         # Pydantic v2 请求/响应模型
@@ -177,7 +183,7 @@ smarthire/
 │   └── src/
 │       ├── api/             # axios API 客户端
 │       ├── components/      # shadcn/ui 组件
-│       ├── pages/           # 10 个页面
+│       ├── pages/           # 12 个页面组件，包含 HR 与求职者入口
 │       ├── hooks/           # React Hooks
 │       └── types/           # TypeScript 类型（映射后端 Pydantic）
 ├── Taskfile.yml             # go-task 任务编排

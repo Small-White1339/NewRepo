@@ -1,0 +1,23 @@
+@startuml
+!include _style.puml
+title F19 AI 分析流水线活动图
+start
+:输入简历原文与岗位原文;
+:ResumeAnalysisAgent\n提取简历资料;
+:JobAnalysisAgent\n提取岗位要求并保留任选条件;
+:MatchingRecommendationAgent\n参考结构化资料与原文\n生成综合 技能 经验分数;
+if (for_job_seeker?) then (True)
+  :CareerAdviceAgent\n简历建议 学习计划 面试准备;
+else (False)
+  :ReportGenerationAgent\n招聘摘要 录用建议 面试问题;
+endif
+:OrchestratorResult\n保存 4 段结果;
+stop
+note right
+任一步骤异常：由调用端保存 FAILED。
+当前是固定顺序编排；没有自主选工具、
+向量检索或独立消息队列任务。
+每个 Agent 做 JSON 解析与 Schema 校验。
+end note
+footer 5 个业务 Agent 类，每次调用其中 4 个 | 当前实现
+@enduml

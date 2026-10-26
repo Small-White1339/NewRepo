@@ -1,0 +1,27 @@
+@startuml
+!include _style.puml
+title F18 Docker Compose 配置部署图
+node "客户端浏览器" as User
+node "Docker 主机" {
+  node "frontend 容器\nNginx :80" as Web
+  node "backend 容器\nUvicorn :8000" as API
+  node "postgres 容器\nPostgreSQL 16 :5432" as PG
+  database "postgres_data 卷" as Data
+  folder "uploads_data 卷" as Files
+  artifact "根目录 .env\n不提交 Git" as Env
+}
+cloud "DeepSeek / 公开资料服务" as External
+User --> Web : HTTP :80
+Web --> API : /api → backend:8000
+API --> PG : asyncpg\npostgres:5432
+PG --> Data
+API --> Files
+API ..> Env : Compose 注入环境变量
+API --> External : HTTPS 443
+note bottom of PG
+当前 compose 同时映射宿主机 8000 和 5432。
+图表示仓库配置，不代表安全加固后的公网方案。
+未在当前环境完成 Docker / PostgreSQL 端到端验收。
+end note
+footer 配置方案视图 | 需另行验收，不能写成已验证部署
+@enduml

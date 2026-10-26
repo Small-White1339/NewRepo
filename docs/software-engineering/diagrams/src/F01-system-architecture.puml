@@ -1,0 +1,42 @@
+@startuml
+!include _style.puml
+title F01 系统分层架构图
+actor HR
+actor "求职者" as Seeker
+rectangle "浏览器表示层" {
+  component "React + TypeScript\n路由、页面、组件、认证状态" as UI
+}
+rectangle "FastAPI 服务层" {
+  component "JWT 身份校验\n角色与资源归属校验" as Auth
+  component "简历 / 岗位 / 匹配\n公开导入 / 求职工作区" as API
+  component "文件解析\nPyPDF2 / python-docx\nRapidOCR 本地识字" as Parser
+  component "Orchestrator\n每次按顺序执行 4 个分析步骤" as AI
+}
+rectangle "持久化层" {
+  database "SQLite 本地\n或 PostgreSQL 配置方案" as DB
+  folder "uploads\n原文件与公开履历文本" as Files
+}
+cloud "外部服务" {
+  component "DeepSeek\n文字分析与报告" as LLM
+  component "Lever\n真实公开岗位" as Lever
+  component "JSON Resume Registry\n本人公开职业履历" as Registry
+}
+HR --> UI
+Seeker --> UI
+UI --> Auth : HTTP / JSON / 文件
+Auth --> API
+API --> DB : SQLAlchemy 异步会话
+API --> Parser
+API --> Files
+API --> AI
+AI --> LLM : 简历文字与岗位说明
+API --> Lever : 固定来源查询
+API --> Registry : 固定用户名查询
+Parser --> Files : 读取原文件
+note bottom of AI
+共 5 个业务 Agent 类。
+前三步共用；最后一步按角色选择
+HR 报告或求职建议，不是五步全执行。
+end note
+footer 当前实现视图 | 代码基线 e92e561 | 原始图片不发送至 DeepSeek
+@enduml

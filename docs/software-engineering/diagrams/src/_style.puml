@@ -1,0 +1,21 @@
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam ArrowColor #334155
+skinparam LineColor #334155
+skinparam packageStyle rectangle
+skinparam componentStyle rectangle
+skinparam rectangleBackgroundColor #EFF6FF
+skinparam componentBackgroundColor #EFF6FF
+skinparam classBackgroundColor #F8FAFC
+skinparam usecaseBackgroundColor #EFF6FF
+skinparam actorStyle stickman
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBackgroundColor #EFF6FF
+skinparam sequenceLifeLineBorderColor #94A3B8
+skinparam stateBackgroundColor #EFF6FF
+skinparam activityBackgroundColor #EFF6FF
+skinparam noteBackgroundColor #FEFCE8
+skinparam noteBorderColor #A16207

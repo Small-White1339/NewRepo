@@ -1,0 +1,41 @@
+@startuml
+!include _style.puml
+title F03 软件包依赖图
+package "frontend/src" {
+  [App.tsx / ProtectedRoute] as Route
+  [pages / components] as Pages
+  [api / client.ts] as Client
+  [hooks/useAuth.tsx] as Session
+  [types] as Types
+  Route --> Pages
+  Pages --> Client
+  Pages --> Session
+  Client --> Types
+}
+package "backend/app" {
+  [main.py / api/v1/router.py] as Router
+  [api/v1 业务端点] as Endpoints
+  [api/deps.py 身份与角色] as Deps
+  [schemas Pydantic] as Schema
+  [models SQLAlchemy] as Models
+  [services 文件与公开来源] as Services
+  [agents 编排与分析] as Agents
+  [database.py / config.py] as Infra
+  Router --> Endpoints
+  Endpoints --> Deps
+  Endpoints --> Schema
+  Endpoints --> Models
+  Endpoints --> Services
+  Endpoints --> Agents
+  Deps --> Models
+  Models --> Infra
+  Services --> Infra
+  Agents --> Infra
+}
+Client --> Router : /api/v1
+note bottom of Endpoints
+当前端点内也包含业务规则与持久化逻辑。
+图中 services 不是覆盖所有业务的服务层。
+end note
+footer 当前代码依赖 | 箭头表示调用或导入，不表示数据所有权
+@enduml

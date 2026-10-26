@@ -1,0 +1,21 @@
+digraph UI {
+  graph [rankdir=LR, bgcolor="white", fontname="Microsoft YaHei", fontsize=20, label="F22 按角色划分的页面导航结构", labelloc=t, pad=0.4, nodesep=0.5, ranksep=0.8];
+  node [shape=box, style="rounded,filled", fillcolor="#EFF6FF", fontname="Microsoft YaHei", fontsize=14, color="#334155", margin=0.15];
+  edge [color="#475569", fontname="Microsoft YaHei", fontsize=12];
+  LOGIN [label="登录 /login\n注册 /register"];
+  HR [label="HR 概览 /"];
+  SK [label="求职概览 /"];
+  RH [label="简历管理 /resumes\n详情 /resumes/:id"];
+  RS [label="我的简历 /resumes\n详情 /resumes/:id"];
+  JOBS [label="岗位管理 /jobs\n岗位详情 /jobs/:id"];
+  MATCH [label="匹配分析 /matches\n报告 /matches/:id"];
+  EXPLORE [label="岗位探索 /opportunities\n详情与匹配 /opportunities/:id"];
+  CAREER [label="我的求职 /career\n收藏与进度 / 匹配报告"];
+  LOGIN -> HR [label="HR"];
+  LOGIN -> SK [label="JOB_SEEKER"];
+  HR -> RH; HR -> JOBS; HR -> MATCH;
+  SK -> RS; SK -> EXPLORE; SK -> CAREER;
+  RS -> EXPLORE [label="上传后查看匹配度"];
+  EXPLORE -> CAREER [label="收藏 / 保存报告"];
+  CAREER -> EXPLORE [label="返回岗位详情"];
+}

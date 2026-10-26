@@ -1,0 +1,39 @@
+@startuml
+!include _style.puml
+title F16 简历照片解析活动图
+start
+:接收文件与登录身份;
+if (扩展名和文件名有效?) then (否)
+  :返回 400;
+  stop
+endif
+if (文件超过 10 MB?) then (是)
+  :返回 413;
+  stop
+endif
+:以 UUID 文件名保存到 uploads;
+:在线程池解析文件;
+if (为图片?) then (是)
+  :校验 JPEG PNG WEBP BMP\n校验不超过 2500 万像素;
+  :纠正方向并调用本地 RapidOCR;
+else (否)
+  :使用 PDF DOCX 或文本解析器;
+endif
+if (解析失败或文字为空?) then (是)
+  :删除本次无效文件;
+  :返回 422，不建立简历记录;
+  stop
+endif
+if (配置了 AI Key?) then (是)
+  :调用 ResumeAnalysisAgent;
+  if (AI 返回有效结果?) then (是)
+    :准备结构化资料;
+  else (否)
+    :记录可重试提示，保留识别文字;
+  endif
+endif
+:建立 PARSED 简历记录\n保存原文和文件位置\n有 AI 结果时写入关联资料;
+:返回 201 与处理消息;
+stop
+footer UML 活动图 | PARSED 表示已获取文本，不等同于 AI 必定成功
+@enduml

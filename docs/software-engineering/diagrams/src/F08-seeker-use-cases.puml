@@ -1,0 +1,36 @@
+@startuml
+!include _style.puml
+left to right direction
+title F08 求职者角色用例图
+actor "求职者" as Seeker
+actor "DeepSeek 服务" as LLM
+actor "外部招聘网站" as Website
+rectangle "SmartHire 系统边界" {
+  usecase "UC01 注册与登录" as Login
+  usecase "UC02 管理自己的简历\n上传照片 / 预览 / AI 解析" as Resume
+  usecase "UC09 搜索在招岗位\n查看原始说明与来源" as Browse
+  usecase "UC10 分析个人岗位匹配度" as Match
+  usecase "校验个人简历与岗位状态" as Check
+  usecase "生成求职准备建议" as Advice
+  usecase "UC11 收藏岗位与记录进度\n保存个人备注" as Save
+  usecase "UC12 查看历史匹配报告" as History
+  usecase "UC13 打开原招聘网页" as Link
+}
+Seeker --> Login
+Seeker --> Resume
+Seeker --> Browse
+Seeker --> Match
+Seeker --> Save
+Seeker --> History
+Seeker --> Link
+Match .> Check : <<include>>
+Match .> Advice : <<include>>
+LLM --> Advice
+Website --> Link
+note bottom of Link
+实际投递发生在外部网站。
+软件只打开来源链接，不向招聘方发送简历。
+进度由求职者手动维护，不代表招聘方反馈。
+end note
+footer UML 用例图 | HR 与求职者的资料按账号隔离
+@enduml

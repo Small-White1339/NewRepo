@@ -1,0 +1,28 @@
+digraph ER {
+graph [rankdir=LR, bgcolor="white", fontname="Microsoft YaHei", fontsize=20, label="F10 数据库 ER 图  键与关键业务字段", labelloc=t, pad=0.4, nodesep=0.6, ranksep=1.2];
+node [shape=plain, fontname="Microsoft YaHei", fontsize=13];
+edge [fontname="Microsoft YaHei", fontsize=11, color="#475569", dir=both, arrowtail=teetee, arrowhead=crowodot];
+certificates [label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#64748B"><TR><TD COLSPAN="2" BGCOLOR="#DBEAFE"><B>certificates</B></TD></TR><TR><TD ALIGN="LEFT">PK id</TD><TD ALIGN="LEFT">INTEGER</TD></TR><TR><TD ALIGN="LEFT">FK resume_id</TD><TD ALIGN="LEFT">CHAR(32)</TD></TR><TR><TD ALIGN="LEFT">name</TD><TD ALIGN="LEFT">VARCHAR(255)</TD></TR></TABLE>>];
+educations [label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#64748B"><TR><TD COLSPAN="2" BGCOLOR="#DBEAFE"><B>educations</B></TD></TR><TR><TD ALIGN="LEFT">PK id</TD><TD ALIGN="LEFT">INTEGER</TD></TR><TR><TD ALIGN="LEFT">FK resume_id</TD><TD ALIGN="LEFT">CHAR(32)</TD></TR><TR><TD ALIGN="LEFT">school</TD><TD ALIGN="LEFT">VARCHAR(255)</TD></TR></TABLE>>];
+job_requirements [label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#64748B"><TR><TD COLSPAN="2" BGCOLOR="#DBEAFE"><B>job_requirements</B></TD></TR><TR><TD ALIGN="LEFT">PK id</TD><TD ALIGN="LEFT">INTEGER</TD></TR><TR><TD ALIGN="LEFT">FK job_id</TD><TD ALIGN="LEFT">CHAR(32)</TD></TR><TR><TD ALIGN="LEFT">name</TD><TD ALIGN="LEFT">VARCHAR(255)</TD></TR></TABLE>>];
+jobs [label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#64748B"><TR><TD COLSPAN="2" BGCOLOR="#DBEAFE"><B>jobs</B></TD></TR><TR><TD ALIGN="LEFT">PK id</TD><TD ALIGN="LEFT">CHAR(32)</TD></TR><TR><TD ALIGN="LEFT">FK user_id</TD><TD ALIGN="LEFT">CHAR(32)</TD></TR><TR><TD ALIGN="LEFT">title</TD><TD ALIGN="LEFT">VARCHAR(255)</TD></TR><TR><TD ALIGN="LEFT">company</TD><TD ALIGN="LEFT">VARCHAR(255)</TD></TR><TR><TD ALIGN="LEFT">status</TD><TD ALIGN="LEFT">VARCHAR(6)</TD></TR></TABLE>>];
+match_reports [label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#64748B"><TR><TD COLSPAN="2" BGCOLOR="#DBEAFE"><B>match_reports</B></TD></TR><TR><TD ALIGN="LEFT">PK id</TD><TD ALIGN="LEFT">CHAR(32)</TD></TR><TR><TD ALIGN="LEFT">FK resume_id</TD><TD ALIGN="LEFT">CHAR(32)</TD></TR><TR><TD ALIGN="LEFT">FK job_id</TD><TD ALIGN="LEFT">CHAR(32)</TD></TR><TR><TD ALIGN="LEFT">overall_score</TD><TD ALIGN="LEFT">FLOAT</TD></TR><TR><TD ALIGN="LEFT">status</TD><TD ALIGN="LEFT">VARCHAR(9)</TD></TR></TABLE>>];
+projects [label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#64748B"><TR><TD COLSPAN="2" BGCOLOR="#DBEAFE"><B>projects</B></TD></TR><TR><TD ALIGN="LEFT">PK id</TD><TD ALIGN="LEFT">INTEGER</TD></TR><TR><TD ALIGN="LEFT">FK resume_id</TD><TD ALIGN="LEFT">CHAR(32)</TD></TR><TR><TD ALIGN="LEFT">name</TD><TD ALIGN="LEFT">VARCHAR(255)</TD></TR><TR><TD ALIGN="LEFT">role</TD><TD ALIGN="LEFT">VARCHAR(100)</TD></TR></TABLE>>];
+resumes [label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#64748B"><TR><TD COLSPAN="2" BGCOLOR="#DBEAFE"><B>resumes</B></TD></TR><TR><TD ALIGN="LEFT">PK id</TD><TD ALIGN="LEFT">CHAR(32)</TD></TR><TR><TD ALIGN="LEFT">FK user_id</TD><TD ALIGN="LEFT">CHAR(32)</TD></TR><TR><TD ALIGN="LEFT">title</TD><TD ALIGN="LEFT">VARCHAR(255)</TD></TR><TR><TD ALIGN="LEFT">status</TD><TD ALIGN="LEFT">VARCHAR(7)</TD></TR></TABLE>>];
+saved_jobs [label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#64748B"><TR><TD COLSPAN="2" BGCOLOR="#DBEAFE"><B>saved_jobs</B></TD></TR><TR><TD ALIGN="LEFT">PK id</TD><TD ALIGN="LEFT">CHAR(32)</TD></TR><TR><TD ALIGN="LEFT">FK user_id</TD><TD ALIGN="LEFT">CHAR(32)</TD></TR><TR><TD ALIGN="LEFT">FK job_id</TD><TD ALIGN="LEFT">CHAR(32)</TD></TR><TR><TD ALIGN="LEFT">stage</TD><TD ALIGN="LEFT">VARCHAR(20)</TD></TR></TABLE>>];
+skills [label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#64748B"><TR><TD COLSPAN="2" BGCOLOR="#DBEAFE"><B>skills</B></TD></TR><TR><TD ALIGN="LEFT">PK id</TD><TD ALIGN="LEFT">INTEGER</TD></TR><TR><TD ALIGN="LEFT">FK resume_id</TD><TD ALIGN="LEFT">CHAR(32)</TD></TR><TR><TD ALIGN="LEFT">name</TD><TD ALIGN="LEFT">VARCHAR(100)</TD></TR></TABLE>>];
+users [label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#64748B"><TR><TD COLSPAN="2" BGCOLOR="#DBEAFE"><B>users</B></TD></TR><TR><TD ALIGN="LEFT">PK id</TD><TD ALIGN="LEFT">CHAR(32)</TD></TR><TR><TD ALIGN="LEFT">username</TD><TD ALIGN="LEFT">VARCHAR(50)</TD></TR><TR><TD ALIGN="LEFT">role</TD><TD ALIGN="LEFT">VARCHAR(10)</TD></TR></TABLE>>];
+work_experiences [label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#64748B"><TR><TD COLSPAN="2" BGCOLOR="#DBEAFE"><B>work_experiences</B></TD></TR><TR><TD ALIGN="LEFT">PK id</TD><TD ALIGN="LEFT">INTEGER</TD></TR><TR><TD ALIGN="LEFT">FK resume_id</TD><TD ALIGN="LEFT">CHAR(32)</TD></TR><TR><TD ALIGN="LEFT">company</TD><TD ALIGN="LEFT">VARCHAR(255)</TD></TR><TR><TD ALIGN="LEFT">title</TD><TD ALIGN="LEFT">VARCHAR(255)</TD></TR></TABLE>>];
+resumes -> certificates [label="resume_id"];
+resumes -> educations [label="resume_id"];
+jobs -> job_requirements [label="job_id"];
+users -> jobs [label="user_id"];
+resumes -> match_reports [label="resume_id"];
+jobs -> match_reports [label="job_id"];
+resumes -> projects [label="resume_id"];
+users -> resumes [label="user_id"];
+users -> saved_jobs [label="user_id"];
+jobs -> saved_jobs [label="job_id"];
+resumes -> skills [label="resume_id"];
+resumes -> work_experiences [label="resume_id"];
+}

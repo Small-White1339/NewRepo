@@ -1,0 +1,23 @@
+digraph DFD {
+  graph [rankdir=LR, bgcolor="white", fontname="Microsoft YaHei", fontsize=20, label="F04 顶层 DFD  系统与外部实体的数据交换", labelloc=t, pad=0.4, nodesep=0.6, ranksep=1.1];
+  node [fontname="Microsoft YaHei", fontsize=15, shape=box, style=filled, fillcolor="white", color="#334155", margin=0.18];
+  edge [fontname="Microsoft YaHei", fontsize=12, color="#475569", arrowsize=0.8];
+  HR [label="E1 招聘人员 HR"];
+  SK [label="E2 求职者"];
+  SYS [shape=box, style="rounded,filled", fillcolor="#DBEAFE", label="P0 SmartHire\n智能招聘与求职辅助系统"];
+  AI [label="E3 DeepSeek"];
+  LEVER [label="E4 Lever 公开岗位"];
+  REG [label="E5 JSON Resume 公开履历"];
+  {rank=same; HR; SK;}
+  {rank=same; AI; LEVER; REG;}
+  HR -> SYS [label="账号资料、候选人简历、岗位资料\n匹配请求、公开资料查询请求"];
+  SYS -> HR [label="认证结果、管理列表\n招聘报告、导入结果"];
+  SK -> SYS [label="账号资料、个人简历、岗位查询\n个人匹配请求、求职记录"];
+  SYS -> SK [label="认证结果、简历与在招岗位\n个人报告、收藏与进度"];
+  SYS -> AI [label="简历文字、岗位说明、分析输入"];
+  AI -> SYS [label="结构化分析与报告 JSON"];
+  SYS -> LEVER [label="固定公司岗位查询"];
+  LEVER -> SYS [label="真实岗位数据与来源链接"];
+  SYS -> REG [label="固定用户名履历查询"];
+  REG -> SYS [label="公开职业资料与来源链接"];
+}

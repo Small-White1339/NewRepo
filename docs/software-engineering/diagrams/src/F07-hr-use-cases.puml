@@ -1,0 +1,40 @@
+@startuml
+!include _style.puml
+left to right direction
+title F07 HR 角色用例图
+actor "招聘人员 HR" as HR
+actor "DeepSeek 服务" as LLM
+actor "Lever / JSON Resume\n公开资料服务" as Public
+rectangle "SmartHire 系统边界" {
+  usecase "UC01 注册与登录" as Login
+  usecase "UC02 管理本人简历库\n上传 / 查询 / 预览 / 删除" as Resumes
+  usecase "UC03 AI 解析简历" as Parse
+  usecase "UC04 管理本人岗位\n创建 / 编辑 / 关闭 / 删除" as Jobs
+  usecase "UC05 AI 分析岗位" as JD
+  usecase "UC06 批量匹配候选人" as Match
+  usecase "UC07 查看本人招聘报告" as Reports
+  usecase "UC08 导入真实公开资料" as Imports
+  usecase "校验角色与资源归属" as Ownership
+  usecase "执行匹配分析流水线" as Pipeline
+}
+HR --> Login
+HR --> Resumes
+HR --> Parse
+HR --> Jobs
+HR --> JD
+HR --> Match
+HR --> Reports
+HR --> Imports
+Match .> Ownership : <<include>>
+Match .> Pipeline : <<include>>
+LLM --> Parse
+LLM --> JD
+LLM --> Pipeline
+Public --> Imports
+note bottom of Ownership
+已登录是业务用例的前置条件。
+HR 仅管理自己账号下的简历与岗位。
+本地 admin 也是 HR，不是独立平台管理员角色。
+end note
+footer UML 用例图 | include 从基础用例指向必需子用例
+@enduml

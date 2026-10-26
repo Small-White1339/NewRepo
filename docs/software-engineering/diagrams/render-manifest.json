@@ -1,0 +1,161 @@
+{
+    "schema":  2,
+    "textNormalization":  "UTF-8 without BOM; LF",
+    "sharedStyleSha256":  "7b19e9f13d4df7cd91e93a315bcd2913bb4975faf7340f85d450096f74ab4d37",
+    "figures":  [
+                    {
+                        "id":  "F01",
+                        "source":  "F01-system-architecture.puml",
+                        "sourceSha256":  "133fee6bbfbb806ab20c06f99bbcdd23bffa185b660d672f561dd1ffa6e39d39",
+                        "svgSha256":  "6539cd1fb288baf6c1b8e3289f7365a3f949368d91f0c660283abf2ce3d72cf9",
+                        "pngSha256":  "8397c4f34741b445c7d00731a9b3b91e984bfdc103dd44fa51e0d6d5bad5a169"
+                    },
+                    {
+                        "id":  "F02",
+                        "source":  "F02-functional-structure.puml",
+                        "sourceSha256":  "28b204ab4030c76b8f52e870032ce953cf5ad1fd27c54470ac4ef284ef6c9b6b",
+                        "svgSha256":  "ad0cdee3c85b27baee08a4d692d5e38f8d33b1528e3e451971deee4368a13437",
+                        "pngSha256":  "d5eb8a90ee043abe528f3f498d5741c02e4d8d43cfa83a08fc003fdf26863214"
+                    },
+                    {
+                        "id":  "F03",
+                        "source":  "F03-package-dependencies.puml",
+                        "sourceSha256":  "b82f019764bc15bcae8d3f92d60c81e4fb0fd5b2ba6a09fe5654fbaebb856076",
+                        "svgSha256":  "bae47304f221c417b6cd3c15e02073a5acfb59800788f166da237a02b097e057",
+                        "pngSha256":  "a094e39349c95b38349e3ab52f3accd874f51aed6be1ff177d8ed0170990d7d3"
+                    },
+                    {
+                        "id":  "F04",
+                        "source":  "F04-dfd-context.dot",
+                        "sourceSha256":  "41ea672d5cc39babd5e11b65cd6dc07a1eed79a94178b43d8dc95985c204e3b8",
+                        "svgSha256":  "1407f2685a782322d09953f8445676931adf4e551192f505509ea69567dd48cc",
+                        "pngSha256":  "9c67dc9ca6b0813827f12751539e9235a48123d4eeeda35c76ab8ecc7e1da1a3"
+                    },
+                    {
+                        "id":  "F05",
+                        "source":  "F05-dfd-level1.dot",
+                        "sourceSha256":  "b005b8a898b2eb06d25fc93ad9b78427db546271732daaf7df066b362c36361e",
+                        "svgSha256":  "e202f9865d7f15268e72172b1826af8f64da58b1bec37b10a7be6751e21301c0",
+                        "pngSha256":  "3f5d0237583df04830e459dee2d6753b9eb58fc1e596d17c172410e6717ab2c9"
+                    },
+                    {
+                        "id":  "F06",
+                        "source":  "F06-dfd-match-level2.dot",
+                        "sourceSha256":  "62229e4e1186f4de1c3b57b763a5ad1c42c84d3ef7efde27967c51d3a07005f7",
+                        "svgSha256":  "eb68e2cd3b24904a16a7ffeeddf2f0055d3722f8cb462c5ccd16f38b96222dc3",
+                        "pngSha256":  "8dbcf24757cc141264484d975e3eb3a02246bfbb8bc48b143651f04d84c11b36"
+                    },
+                    {
+                        "id":  "F07",
+                        "source":  "F07-hr-use-cases.puml",
+                        "sourceSha256":  "05a681b031b2e744a6fe7e82c45ff5fd7131f120451fa93907c67a160c599bc2",
+                        "svgSha256":  "9ab6b1d7b5e624db716f663cc20ef955df6d5bccc5111ba84db6f7b49f7dd39b",
+                        "pngSha256":  "755d7a25e04e704a170199142b7e106320882d38f4418ba37196214ce06ddf22"
+                    },
+                    {
+                        "id":  "F08",
+                        "source":  "F08-seeker-use-cases.puml",
+                        "sourceSha256":  "b19093fb1637bfde41f535241dd6413491193005ecb3833da2201b5449d3efcc",
+                        "svgSha256":  "cf11478373a7de58d69c46c3c94cef94957f89e642f4ffdc4f18385c2784447a",
+                        "pngSha256":  "a28fb91a1c02e9f3ba041bfd9fadeda3bca5307a5b9ad6fe89c66f1f9da33c51"
+                    },
+                    {
+                        "id":  "F09",
+                        "source":  "F09-domain-class.puml",
+                        "sourceSha256":  "611e976365615438d15ee875060fd4be91560f71b96309cee3c654e9ad66b79f",
+                        "svgSha256":  "14de83e15532a0436ae4b953b5f6e9651637ab7e8e15c23d522b4d660fcf2938",
+                        "pngSha256":  "790aef748b57a2ef9507b7c146d019784c687275f42c52e7f4dcd953fb751a3c"
+                    },
+                    {
+                        "id":  "F10",
+                        "source":  "F10-database-er.dot",
+                        "sourceSha256":  "883f65887059a79cbcf109fd5e31068accce6d36a2231ecc34bf3f7d376e4a74",
+                        "svgSha256":  "32c1b429e3ac7366f5e72a47425796f9618df1feab2146c5817282159422e04b",
+                        "pngSha256":  "67d8959110bbb7ac4cb7740e49631dcf7d00cdd3de53e2c79ccb6fca34a63feb"
+                    },
+                    {
+                        "id":  "F11",
+                        "source":  "F11-hr-match-sequence.puml",
+                        "sourceSha256":  "975945cdc22d06dd66ec68f8374b77a80d89f36fe7d066b414169f57fd91e881",
+                        "svgSha256":  "a4aea0428cb668c92b38bed2940947337c48a82d397103b0e2829935b2b94bf7",
+                        "pngSha256":  "b136730824fadc80cfaecdc3e2d9287ac4ec4f2222153c7d3ee615cf6ce11ed4"
+                    },
+                    {
+                        "id":  "F12",
+                        "source":  "F12-seeker-match-sequence.puml",
+                        "sourceSha256":  "4dc41cc9d2671c5ad705e3d2fb621e0024e53ef1f99e9742918ff1424c16ecea",
+                        "svgSha256":  "48e50328df3c2f587d2fb46e10e53a0ee7b584e5359ae49b536903aad8724c35",
+                        "pngSha256":  "5d9f99893fb8ebc228b004605eca8db4294a5556f4c3bc15f5f7586268d3d3fd"
+                    },
+                    {
+                        "id":  "F13",
+                        "source":  "F13-photo-upload-sequence.puml",
+                        "sourceSha256":  "a66eb90469f5434e9ab6a961865c373ab74fa2aa213d906033c922cb4cb2612e",
+                        "svgSha256":  "07809f1e2ea7357bfa8b28611c5919f128d7dcb0c50013c43039009541f22a53",
+                        "pngSha256":  "430874783190913b6da588a47115d437bf5520cae7eacb8918f011e3f7b1cff4"
+                    },
+                    {
+                        "id":  "F14",
+                        "source":  "F14-match-state.puml",
+                        "sourceSha256":  "e50323b4cf1938c10546da6ac2c3e382ba8eb821925effd562b748bd6207bf81",
+                        "svgSha256":  "55aba1e7d7fde26d22adc3162e7ea5e59a9ec7d1b7e64e8d134016402bf7614b",
+                        "pngSha256":  "f349e4a863bd2a6b5b15f94b9331e9981978b5a1e07e3ebed8f235240dc2f6b6"
+                    },
+                    {
+                        "id":  "F15",
+                        "source":  "F15-saved-job-state.puml",
+                        "sourceSha256":  "b8bc05dd3e71c875bd316e55ebb6522e061956d3c96af9d6bcd4e5313df4c247",
+                        "svgSha256":  "cc7e8915b28134dd320a5eda6cc2760fdfafeac7debec4d60de2f6c9c156a19a",
+                        "pngSha256":  "58aa498102400da070f90862a1ff65d9ec784796b9a37e5c4e703f89c130d6bf"
+                    },
+                    {
+                        "id":  "F16",
+                        "source":  "F16-photo-activity.puml",
+                        "sourceSha256":  "78337c4237e2e226973df081e1f6bc35eaef725d8101d7d0faf67735feaec811",
+                        "svgSha256":  "6171def00d9ae37f24d6d51ec1942551dd4c3174ac9f8e26d1cb1627b6ff7b88",
+                        "pngSha256":  "b6adc112f40953c7b1df98af7963aff9297ff17c1ea8a21bfee8059f7367cca2"
+                    },
+                    {
+                        "id":  "F17",
+                        "source":  "F17-local-deployment.puml",
+                        "sourceSha256":  "469d0c1978844ebb592cca8d019be34679859b0e2fd9806238fae5228fc596c5",
+                        "svgSha256":  "3a8452adaba0040e1524fa0e457b3ec013c26819ef36443373de6853926de869",
+                        "pngSha256":  "28d3ef346b3b80339f19c8088c741e776ce55874d035583a11516238d0ce88a5"
+                    },
+                    {
+                        "id":  "F18",
+                        "source":  "F18-docker-deployment.puml",
+                        "sourceSha256":  "320a87fcfff248ebeafe1fcf56992488dc1293c8e2098380fb99e36795a55bf5",
+                        "svgSha256":  "1b9737d6c2f014913b1a3e743f21ae5c05d8199814b27cfc2cdc2657301e8716",
+                        "pngSha256":  "7e5625a57964e19727513ea315b3c40a3d335c569aba2866e4d93f4e5fd79d67"
+                    },
+                    {
+                        "id":  "F19",
+                        "source":  "F19-ai-pipeline.puml",
+                        "sourceSha256":  "6264e8538b0d73419aed0aa3c9edf7650cc88af07ffe3586bdbc72a6d6dae227",
+                        "svgSha256":  "efa81111e4863953af7ab3b2ec38a1a76699226d9a919b7affe0ee51d89bb0bd",
+                        "pngSha256":  "68b9102a8ed431aeb2e86089b36cc47345334d1778c35822b14a100b231572a5"
+                    },
+                    {
+                        "id":  "F20",
+                        "source":  "F20-configuration-workflow.dot",
+                        "sourceSha256":  "b789c31c53cc668e38c104aa548d785348933d01318bd1cafb8ddcd560e72bb9",
+                        "svgSha256":  "3b02ff77e177ae8ee522b6a0e0f50bfdbb52da564b15a51ba6fd546b9852145d",
+                        "pngSha256":  "133eb13e2648c9b7c70d120a59547149ba2cc2adbabc2733d40e2dc1914c0722"
+                    },
+                    {
+                        "id":  "F21",
+                        "source":  "F21-relative-gantt.dot",
+                        "sourceSha256":  "e5d4f7be6cc5212e9f562c09f7d02002231f0d62c509423dbb2be37c9167f857",
+                        "svgSha256":  "a610b15a584a5a2f196ce87f1552fe761f2aaa0ada5d8ebecf41dd2d7d442eb2",
+                        "pngSha256":  "045d65d7ae35f5d31b1ef44a191e87ef8a5ca0783fa8c2253685efaafb0820f8"
+                    },
+                    {
+                        "id":  "F22",
+                        "source":  "F22-ui-navigation.dot",
+                        "sourceSha256":  "78610c03b481a13808d4b7c4bb12e88b19edba11f9292a9019f082b4de3e95b9",
+                        "svgSha256":  "5b936cacc5300802fe920ca30fe1c8704a6b1c69a3b3f1c05f71cd29b54a6f4f",
+                        "pngSha256":  "b4ee20b578b77ff7f6cb8e55f3e5d0d68a8eb3779b79632a37727587ef8a35da"
+                    }
+                ]
+}

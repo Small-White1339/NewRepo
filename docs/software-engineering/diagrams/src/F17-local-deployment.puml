@@ -1,0 +1,35 @@
+@startuml
+!include _style.puml
+title F17 本地运行部署图
+node "同一台开发电脑" {
+  node "浏览器" {
+    artifact "React 页面" as UI
+  }
+  node "Node.js 进程\nVite 127.0.0.1:5180" as Vite
+  node "Python 虚拟环境\nUvicorn 127.0.0.1:8000" as API {
+    component "FastAPI + Agent + 本地 OCR" as App
+  }
+  database "backend/smarthire.db\nSQLite" as DB
+  folder "backend/uploads" as Files
+  artifact "backend/.env\n本地配置，不提交 Git" as Env
+  artifact "启动软件.cmd\nstart-local.ps1" as Start
+}
+cloud "互联网" {
+  component "DeepSeek" as LLM
+  component "Lever / JSON Resume" as Source
+}
+UI --> Vite : HTTP 页面与 /api
+Vite --> App : /api 反向代理
+App --> DB : aiosqlite
+App --> Files
+App ..> Env : 读取配置
+App --> LLM : HTTPS 443
+App --> Source : HTTPS 443
+Start --> Vite : 后台启动
+Start --> API : 迁移后启动
+note bottom of Vite
+5180 是 Windows 启动脚本端口。
+直接运行 Vite 的默认配置仍为 5173。
+end note
+footer 当前已验证的本地拓扑 | 监听回环地址，不表示已发布公网
+@enduml

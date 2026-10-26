@@ -1,0 +1,67 @@
+@startuml
+!include _style.puml
+hide methods
+hide circle
+title F09 核心领域类图
+class User {
+  id: UUID
+  username: str
+  hashed_password: str
+  role: UserRole
+}
+class Resume {
+  id: UUID
+  user_id: UUID
+  file_path: str
+  raw_text: Text
+  parsed_data: JSON
+  status: ResumeStatus
+}
+class Job {
+  id: UUID
+  user_id: UUID
+  title: str
+  raw_description: Text
+  structured_data: JSON
+  status: JobStatus
+}
+class MatchReport {
+  id: UUID
+  resume_id: UUID
+  job_id: UUID
+  overall_score: float?
+  result_data: JSON?
+  status: MatchStatus
+}
+class SavedJob {
+  id: UUID
+  user_id: UUID
+  job_id: UUID
+  stage: str
+  notes: Text
+}
+class Education
+class Skill
+class Project
+class WorkExperience
+class Certificate
+class JobRequirement
+User "1" -- "0..*" Resume : 所有者
+User "1" -- "0..*" Job : 发布者
+User "1" -- "0..*" SavedJob : 私有求职记录
+Resume "1" -- "0..*" Education
+Resume "1" -- "0..*" Skill
+Resume "1" -- "0..*" Project
+Resume "1" -- "0..*" WorkExperience
+Resume "1" -- "0..*" Certificate
+Job "1" -- "0..*" JobRequirement
+Resume "1" -- "0..*" MatchReport
+Job "1" -- "0..*" MatchReport
+Job "1" -- "0..*" SavedJob
+note bottom of SavedJob
+唯一约束：(user_id, job_id)。
+报告通过 Resume.user_id 判断归属，
+MatchReport 自身没有 user_id 字段。
+end note
+footer UML 类图 | 属性为关键字段子集，完整字段见数据库字典
+@enduml

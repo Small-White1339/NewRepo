@@ -1,0 +1,38 @@
+@startuml
+!include _style.puml
+title F11 HR 批量匹配顺序图
+actor HR
+participant "Matches 页面" as UI
+participant "matches.py" as API
+database "业务数据库" as DB
+participant Orchestrator as Flow
+participant "4 个顺序分析步骤" as Agents
+participant DeepSeek as LLM
+HR -> UI : 选择岗位与候选人简历
+UI -> API : POST /matches/analyze\njob_id + resume_ids
+API -> API : 验证 HR 与 API Key
+API -> DB : 查询本人岗位和简历
+DB --> API : 岗位正文与有效简历
+API -> API : 简历 ID 去重，跳过无效简历
+alt 无有效简历或岗位无效
+  API --> UI : 400 / 404 / 503
+else 可以分析
+  API -> DB : 为有效简历创建 PENDING 报告并 flush
+  note over API,Flow : 每份简历独立执行；asyncio.gather 配合信号量限制并发
+  group 单份有效简历的子流程
+    API -> Flow : analyze(resume_text, job_description)
+    loop 简历分析 → 岗位分析 → 匹配 → HR 报告
+      Flow -> Agents : 当前步骤输入
+      Agents -> LLM : 文字与输出 Schema
+      LLM --> Agents : JSON
+      Agents --> Flow : 已校验的结构化结果
+    end
+    Flow --> API : 分数与报告 / 异常
+    API -> DB : COMPLETED + 分数\n或 FAILED + 错误信息
+  end
+  API -> DB : flush / refresh，依赖结束提交事务
+  API --> UI : 201 报告列表（逐项检查状态）
+  UI --> HR : 完成数 / 失败数 / 报告入口
+end
+footer UML 顺序图 | 当前为请求内等待，不是消息队列后台任务
+@enduml

@@ -1,0 +1,39 @@
+@startuml
+!include _style.puml
+title F12 求职者个人匹配顺序图
+actor "求职者" as User
+participant CareerJobDetail as UI
+participant "career.analyze_career_match" as API
+database "业务数据库" as DB
+participant Orchestrator as Flow
+participant DeepSeek as LLM
+User -> UI : 选择自己的简历
+UI -> API : POST /career/analyze\njob_id + resume_id
+API -> API : 登录与求职者角色校验
+API -> DB : 查询 ACTIVE 岗位与本人简历
+DB --> API : 资源与正文
+alt 资源无效 / 无正文 / 无 Key
+  API --> UI : 404 / 422 / 503，不创建报告
+else 校验通过
+  API -> DB : 新建 PENDING 报告并 commit
+  note right of DB : 避免 AI 请求长时间占用\nSQLite 写事务
+  API -> Flow : analyze(..., for_job_seeker=True)
+  Flow -> LLM : 第 1 步 简历分析
+  LLM --> Flow : resume_analysis
+  Flow -> LLM : 第 2 步 岗位分析
+  LLM --> Flow : job_analysis
+  Flow -> LLM : 第 3 步 匹配分析，含原文
+  LLM --> Flow : match_result
+  Flow -> LLM : 第 4 步 CareerAdviceAgent，含原文
+  LLM --> Flow : 简历建议 / 学习计划 / 面试准备
+  Flow --> API : 结果或异常
+  API -> DB : 保存 COMPLETED 或 FAILED
+  API --> UI : 201，正文携带实际状态
+  UI --> User : 三项评分与准备建议，或失败提示
+  User -> UI : 打开我的求职
+  UI -> API : GET /career/reports
+  API -> DB : 按 Resume.user_id 查询报告
+  DB --> UI : 本人历史报告
+end
+footer UML 顺序图 | 结果不会发给 HR；匹配分数不是录用概率
+@enduml

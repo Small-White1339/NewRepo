@@ -1,0 +1,22 @@
+@startuml
+!include _style.puml
+title F14 匹配报告状态图
+state "PENDING\n等待分析完成" as Pending
+state "COMPLETED\n分数与结构化结果已保存" as Complete
+state "FAILED\n失败说明，分数为空" as Failed
+[*] --> Pending : 业务校验通过，创建报告
+Pending --> Complete : 4 步分析均成功
+Pending --> Failed : 任一步骤抛出异常
+Complete --> [*] : 关联简历或岗位被删除
+Failed --> [*] : 关联简历或岗位被删除
+note right of Pending
+求职端先 commit，使待分析记录可查询。
+HR 端在批量请求事务内保存。
+资源无效、无 Key 等校验错误不创建报告。
+end note
+note bottom of Failed
+重试分析会新建报告，不把原报告改回 PENDING。
+服务中断后没有自动恢复 PENDING 的后台机制。
+end note
+footer UML 状态图 | 对象为 MatchReport，不是求职投递状态
+@enduml
