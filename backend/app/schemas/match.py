@@ -7,10 +7,14 @@ from pydantic import BaseModel, Field
 
 # ---------- Request Schemas ----------
 
+
 class MatchAnalyzeRequest(BaseModel):
     """Request to analyze match between resumes and a job."""
+
     resume_ids: list[UUID] = Field(
-        ..., min_length=1, max_length=20,
+        ...,
+        min_length=1,
+        max_length=20,
         description="Resume IDs to analyze (min 1, max 20)",
     )
     job_id: UUID = Field(..., description="Job ID to match against")
@@ -18,10 +22,12 @@ class MatchAnalyzeRequest(BaseModel):
 
 # ---------- Response Schemas ----------
 
+
 class MatchResultData(BaseModel):
     """Full pipeline result stored as JSONB in match reports.
     Matches the OrchestratorResult.to_dict() output format.
     """
+
     resume_analysis: dict | None = None
     job_analysis: dict | None = None
     match_result: dict | None = None
@@ -30,6 +36,7 @@ class MatchResultData(BaseModel):
 
 class MatchReportResponse(BaseModel):
     """Match report detail response."""
+
     id: UUID
     resume_id: UUID
     job_id: UUID
@@ -43,6 +50,7 @@ class MatchReportResponse(BaseModel):
 
 class MatchReportListItem(BaseModel):
     """Match report list item (summary)."""
+
     id: UUID
     resume_id: UUID
     job_id: UUID
@@ -55,6 +63,7 @@ class MatchReportListItem(BaseModel):
 
 class MatchAnalyzeBatchResponse(BaseModel):
     """Batch analyze response wrapping multiple match reports."""
+
     results: list[MatchReportResponse]
     total: int
     succeeded: int

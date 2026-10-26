@@ -2,8 +2,8 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { Spinner } from '@/components/ui/spinner';
 
-export default function ProtectedRoute() {
-  const { isAuthenticated, loading } = useAuth();
+export default function ProtectedRoute({ hrOnly = false, seekerOnly = false }: { hrOnly?: boolean; seekerOnly?: boolean }) {
+  const { isAuthenticated, isHR, loading } = useAuth();
 
   if (loading) {
     return (
@@ -15,6 +15,10 @@ export default function ProtectedRoute() {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if ((hrOnly && !isHR) || (seekerOnly && isHR)) {
+    return <Navigate to="/" replace />;
   }
 
   return <Outlet />;

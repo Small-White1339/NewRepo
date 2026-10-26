@@ -77,6 +77,9 @@ export interface Certificate {
 export type ResumeStatus = 'PENDING' | 'PARSED' | 'FAILED';
 
 export interface ResumeListItem {
+  source_name?: string | null;
+  source_url?: string | null;
+  imported_at?: string | null;
   id: string;
   title: string;
   status: ResumeStatus;
@@ -95,6 +98,9 @@ export interface ResumeUpdateRequest {
 }
 
 export interface ResumeResponse {
+  source_name?: string | null;
+  source_url?: string | null;
+  imported_at?: string | null;
   id: string;
   user_id: string;
   title: string;
@@ -122,9 +128,12 @@ export interface JobRequirement {
 }
 
 export type JobStatus = 'DRAFT' | 'ACTIVE' | 'CLOSED';
-export type JobLevel = 'JUNIOR' | 'INTERMEDIATE' | 'SENIOR' | 'EXPERT';
+export type JobLevel = 'JUNIOR' | 'INTERMEDIATE' | 'SENIOR' | 'EXPERT' | 'UNSPECIFIED';
 
 export interface JobListItem {
+  source_name?: string | null;
+  source_url?: string | null;
+  imported_at?: string | null;
   id: string;
   title: string;
   company: string;
@@ -149,6 +158,9 @@ export interface JobUpdateRequest {
 }
 
 export interface JobResponse {
+  source_name?: string | null;
+  source_url?: string | null;
+  imported_at?: string | null;
   id: string;
   user_id: string;
   title: string;

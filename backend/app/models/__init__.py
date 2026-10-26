@@ -1,5 +1,6 @@
 """SQLAlchemy ORM models."""
 
+from app.models.career import SavedJob
 from app.models.job import Job, JobRequirement, JobStatus, RequirementCategory
 from app.models.match import MatchReport, MatchStatus
 from app.models.resume import (
@@ -14,6 +15,7 @@ from app.models.resume import (
 from app.models.user import User, UserRole
 
 __all__ = [
+    "SavedJob",
     "User",
     "UserRole",
     "Resume",

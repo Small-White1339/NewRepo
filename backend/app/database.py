@@ -12,6 +12,7 @@ from sqlalchemy.orm import DeclarativeBase
 
 from app.config import settings
 
+
 def _mask_db_url(url: str) -> str:
     """Mask the password in a database URL for safe logging."""
     if "://" not in url:

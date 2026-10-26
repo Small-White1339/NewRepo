@@ -13,6 +13,7 @@ from typing import Any
 
 from loguru import logger
 
+from app.agents.career_agent import CareerAdviceAgent
 from app.agents.job_agent import JobAnalysisAgent
 from app.agents.match_agent import MatchingRecommendationAgent
 from app.agents.report_agent import ReportGenerationAgent
@@ -61,12 +62,14 @@ class Orchestrator:
         self.job_agent = JobAnalysisAgent()
         self.match_agent = MatchingRecommendationAgent()
         self.report_agent = ReportGenerationAgent()
+        self.career_agent = CareerAdviceAgent()
         logger.info("Orchestrator initialized with 4 agents")
 
     async def analyze(
         self,
         resume_text: str,
         job_description: str,
+        for_job_seeker: bool = False,
     ) -> OrchestratorResult:
         """运行完整的 4 Agent 分析流水线。
 
@@ -104,6 +107,8 @@ class Orchestrator:
             match_result = await self.match_agent.run(
                 resume_analysis=resume_analysis,
                 job_analysis=job_analysis,
+                resume_text=resume_text,
+                job_description=job_description,
             )
             logger.debug(f"Matching completed: score={match_result.get('overall_score')}")
         except Exception as e:
@@ -113,10 +118,16 @@ class Orchestrator:
         # ── 第 4 步：报告生成 ────────────────────────────────────
         logger.info("Orchestrator: step 4/4 — Report Generation")
         try:
-            report = await self.report_agent.run(
+            report_agent = self.career_agent if for_job_seeker else self.report_agent
+            report = await report_agent.run(
                 resume_analysis=resume_analysis,
                 job_analysis=job_analysis,
                 match_result=match_result,
+                **(
+                    {"resume_text": resume_text, "job_description": job_description}
+                    if for_job_seeker
+                    else {}
+                ),
             )
             logger.debug(f"Report completed: recommendation={report.get('hiring_recommendation')}")
         except Exception as e:

@@ -22,9 +22,9 @@ export default function Layout() {
       </Sheet>
 
       {/* Main content area */}
-      <div className="flex flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-        <main className="flex-1 bg-muted/30 p-6">
+        <main className="min-w-0 flex-1 bg-muted/30 p-4 sm:p-6">
           <Outlet />
         </main>
       </div>

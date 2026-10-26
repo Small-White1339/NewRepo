@@ -19,7 +19,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Target, Zap, ChevronDown } from 'lucide-react';
 import type { MatchReportListItem, ResumeListItem, JobListItem } from '../types';
 
-const LEVEL_LABELS: Record<string, string> = { JUNIOR: '初级', INTERMEDIATE: '中级', SENIOR: '高级', EXPERT: '专家' };
+const LEVEL_LABELS: Record<string, string> = { JUNIOR: '初级', INTERMEDIATE: '中级', SENIOR: '高级', EXPERT: '专家', UNSPECIFIED: '以原文为准' };
 
 export default function Matches() {
   const { isHR } = useAuth();
@@ -69,7 +69,11 @@ export default function Matches() {
     setError('');
     setAnalyzing(true);
     try {
-      await analyzeMatch({ resume_ids: selectedResumeIds, job_id: selectedJob });
+      const results = await analyzeMatch({ resume_ids: selectedResumeIds, job_id: selectedJob });
+      const failed = results.filter((result) => result.status === 'FAILED');
+      if (failed.length > 0) {
+        setError(`${failed.length} 份简历分析失败，请查看报告中的错误信息后重试。`);
+      }
       setSelectedResumeIds([]);
       setSelectedJob('');
       await fetchData();

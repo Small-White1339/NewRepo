@@ -13,14 +13,13 @@ from app.config import settings
 async def _seed_admin_user():
     """初始化默认管理员账户（admin/admin），仅本地开发使用。"""
     from sqlalchemy import select
-    from app.database import async_session
+
+    from app.database import async_session_factory
     from app.models.user import User, UserRole
     from app.services.auth import hash_password
 
-    async with async_session() as session:
-        result = await session.execute(
-            select(User).where(User.username == "admin")
-        )
+    async with async_session_factory() as session:
+        result = await session.execute(select(User).where(User.username == "admin"))
         if result.scalar_one_or_none() is None:
             user = User(
                 username="admin",
@@ -40,13 +39,10 @@ async def _seed_admin_user():
 async def lifespan(app: FastAPI):
     """处理应用的启动和关闭。"""
     logger.info(f"Starting {settings.APP_NAME}...")
-    logger.debug(f"Database URL: {settings.DATABASE_URL}")
 
     # 初始化默认管理员
-    try:
+    if settings.SEED_ADMIN:
         await _seed_admin_user()
-    except Exception as e:
-        logger.warning(f"Default admin user creation skipped: {e}")
 
     yield
     logger.info(f"Shutting down {settings.APP_NAME}...")

@@ -4,8 +4,7 @@ import enum
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text, func
-from sqlalchemy import JSON
+from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -26,6 +25,7 @@ class JobLevel(str, enum.Enum):
     INTERMEDIATE = "INTERMEDIATE"
     SENIOR = "SENIOR"
     EXPERT = "EXPERT"
+    UNSPECIFIED = "UNSPECIFIED"
 
 
 class RequirementCategory(str, enum.Enum):
@@ -43,6 +43,9 @@ class Job(Base):
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
+    source_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    source_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    imported_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     company: Mapped[str] = mapped_column(String(255), nullable=False)
     raw_description: Mapped[str | None] = mapped_column(Text, nullable=True)
     structured_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
@@ -50,11 +53,12 @@ class Job(Base):
         Enum(JobStatus, name="job_status"), nullable=False, default=JobStatus.DRAFT
     )
     level: Mapped[JobLevel] = mapped_column(
-        Enum(JobLevel, name="job_level"), nullable=False, default=JobLevel.INTERMEDIATE
+        Enum(JobLevel, name="job_level"),
+        nullable=False,
+        default=JobLevel.INTERMEDIATE,
+        server_default="INTERMEDIATE",
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
@@ -64,9 +68,8 @@ class Job(Base):
     requirements = relationship(
         "JobRequirement", back_populates="job", cascade="all, delete-orphan"
     )
-    match_reports = relationship(
-        "MatchReport", back_populates="job", cascade="all, delete-orphan"
-    )
+    match_reports = relationship("MatchReport", back_populates="job", cascade="all, delete-orphan")
+    saved_by = relationship("SavedJob", back_populates="job", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Job {self.title} @ {self.company}>"

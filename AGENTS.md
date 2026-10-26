@@ -27,8 +27,8 @@ smarthire/
 
 ```bash
 cd backend && uv sync
-cd frontend && npm install
-cd backend && uv run alembic upgrade head  # creates DB + admin/admin user
+cd frontend && npm ci
+cd backend && uv run alembic upgrade head  # creates DB
 ```
 
 ## Dev servers
@@ -59,7 +59,7 @@ job.requirements = []
 ```
 ResumeAnalysisAgent → JobAnalysisAgent → MatchingRecommendationAgent → ReportGenerationAgent
 ```
-Each agent uses `_call_llm_structured()` (JSON prompt → parse → validate → retry ×2 → fallback).
+Each agent uses `_call_llm_structured()` (JSON prompt → parse → validate, up to 2 attempts). Missing API keys, invalid output, or service failures raise `AgentError`; no empty success results are generated.
 
 ## Commands
 
@@ -88,5 +88,5 @@ task docker:up           # docker compose up -d --build
 1. **MissingGreenlet**: Any ORM relationship access outside an explicit `selectinload()` in async context will crash. Fix: always use `selectinload()` on queries, never rely on lazy loading.
 2. **`with_structured_output`**: ChatTongyi's implementation rejects `method=...` kwargs. Use manual JSON prompting instead.
 3. **`.env` location**: Backend reads `.env` from `backend/` (working directory). Keep both `smarthire/.env` and `smarthire/backend/.env` in sync.
-4. **Resume upload AI**: If no API key is configured, the AI analysis step is silently skipped. Check logs for "DeepSeek API key not set".
+4. **Resume upload AI**: Without an API key, uploads still extract text, but AI analysis is skipped. Explicit analysis returns HTTP 503. Local admin seeding requires `SEED_ADMIN=true`; Docker defaults to false.
 5. **Alembic env.py** overrides `sqlalchemy.url` from `settings.DATABASE_URL` at runtime. Don't edit the hardcoded URL in `alembic.ini`.

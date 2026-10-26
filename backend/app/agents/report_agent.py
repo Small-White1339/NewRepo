@@ -9,8 +9,10 @@ from app.agents.base import BaseAgent
 
 # ── Structured Output Schema ──────────────────────────────────────────
 
+
 class ReportResult(BaseModel):
     """Structured output from the final recruitment report generator."""
+
     executive_summary: str = Field(
         description="Concise executive summary of the candidate-job match (2-3 paragraphs)",
     )
@@ -20,8 +22,7 @@ class ReportResult(BaseModel):
     )
     hiring_recommendation: str = Field(
         description=(
-            "Final recommendation: 'strong_hire', 'hire', 'consider',"
-            " 'weak', or 'not_recommended'"
+            "Final recommendation: 'strong_hire', 'hire', 'consider', 'weak', or 'not_recommended'"
         ),
     )
     follow_up_questions: list[str] = Field(
@@ -47,10 +48,12 @@ Based on all this information, produce a final recruitment report covering:
 4. Follow-up questions - specific questions to verify claims or clarify gaps
 
 Be professional, objective, and actionable. Provide concrete interview suggestions.
-IMPORTANT: All text output MUST be written in Simplified Chinese. Only technical terms may remain in English."""
+IMPORTANT: All text output MUST be written in Simplified Chinese.
+Only technical terms may remain in English."""
 
 
 # ── Agent Implementation ──────────────────────────────────────────────
+
 
 class ReportGenerationAgent(BaseAgent):
     """Agent responsible for generating recruitment analysis reports."""
@@ -95,8 +98,7 @@ class ReportGenerationAgent(BaseAgent):
             output_schema=ReportResult,
             user_prompt=user_prompt,
             rag_query=(
-                "Recruitment report generation: interview suggestions"
-                " and hiring recommendations"
+                "Recruitment report generation: interview suggestions and hiring recommendations"
             ),
         )
 

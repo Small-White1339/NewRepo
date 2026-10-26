@@ -1,0 +1,17 @@
+此简历为软件功能演示使用的虚构数据。
+
+姓名：张晨
+求职方向：Python 后端工程师
+学历：计算机科学与技术 本科
+工作年限：3 年
+
+技能：Python、FastAPI、SQLAlchemy、PostgreSQL、Redis、Docker、Git、pytest。
+
+工作经历：
+2023-07 至今，示例科技有限公司，后端工程师。
+负责招聘平台的 REST API、数据库设计、权限控制和自动化测试。
+使用 Redis 缓存优化列表查询，使用 Docker 部署服务。
+
+项目经历：
+人才管理系统：使用 FastAPI 和 PostgreSQL 实现简历管理、岗位管理和检索接口。
+负责后端架构、接口实现与接口测试。

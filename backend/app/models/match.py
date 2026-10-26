@@ -4,8 +4,7 @@ import enum
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, Enum, Float, ForeignKey, func
-from sqlalchemy import JSON
+from sqlalchemy import JSON, DateTime, Enum, Float, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -30,9 +29,7 @@ class MatchReport(Base):
     status: Mapped[MatchStatus] = mapped_column(
         Enum(MatchStatus, name="match_status"), nullable=False, default=MatchStatus.PENDING
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     # 关联关系
     resume = relationship("Resume", back_populates="match_reports")

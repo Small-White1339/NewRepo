@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getResume, deleteResume, analyzeResume } from '../api/resumes';
+import { getErrorMessage } from '../api/errors';
 import StatusBadge from '../components/StatusBadge';
+import SourceInfo from '../components/SourceInfo';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -38,7 +40,7 @@ export default function ResumeDetail() {
     );
   }
 
-  if (error || !resume) {
+  if (!resume) {
     return (
       <div className="flex flex-col items-center gap-4 py-12">
         <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
@@ -65,11 +67,12 @@ export default function ResumeDetail() {
             disabled={analyzing}
             onClick={async () => {
               if (!resume) return;
+              setError('');
               setAnalyzing(true);
               try {
                 const updated = await analyzeResume(resume.id);
                 setResume(updated);
-              } catch { setError('AI 分析失败'); }
+              } catch (err) { setError(getErrorMessage(err, 'AI 分析失败')); }
               finally { setAnalyzing(false); }
             }}
           >
@@ -85,6 +88,7 @@ export default function ResumeDetail() {
         </div>
       </div>
 
+      {error && <p role="alert" className="text-destructive">{error}</p>}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Basic Info */}
         <Card>
@@ -93,6 +97,7 @@ export default function ResumeDetail() {
           </CardHeader>
           <CardContent className="flex flex-col gap-2 text-sm">
             <p><span className="font-medium">文件名：</span>{resume.title}</p>
+            <SourceInfo name={resume.source_name} url={resume.source_url} importedAt={resume.imported_at} />
             <p><span className="font-medium">状态：</span>
               <span className={resume.status === 'PARSED' ? 'text-emerald-600 font-medium' : resume.status === 'FAILED' ? 'text-destructive' : 'text-muted-foreground'}>
                 {resume.status === 'PARSED' ? '已解析' : resume.status === 'FAILED' ? '解析失败' : '待解析'}
@@ -247,6 +252,11 @@ export default function ResumeDetail() {
           </Card>
         )}
       </div>
+
+      {resume.raw_text && <Card>
+        <CardHeader><CardTitle>识别的简历原文</CardTitle></CardHeader>
+        <CardContent><pre className="whitespace-pre-wrap break-words font-sans text-sm max-h-96 overflow-y-auto">{resume.raw_text}</pre></CardContent>
+      </Card>}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

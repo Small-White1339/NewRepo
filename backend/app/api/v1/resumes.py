@@ -2,19 +2,21 @@
 
 import os
 import re
-from uuid import UUID
+from html import escape
+from pathlib import Path
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, status
+from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from starlette.concurrency import run_in_threadpool
 
-from loguru import logger
-
+from app.agents.base import AgentError
 from app.api.deps import get_current_user, get_current_user_from_query, get_db
 from app.config import settings
 from app.models.resume import (
-    Certificate,
     Education,
     Project,
     Resume,
@@ -29,48 +31,82 @@ from app.schemas.resume import (
     ResumeUpdateRequest,
     ResumeUploadResponse,
 )
-from app.services.resume_parser import parse_resume_file
+from app.services.resume_parser import IMAGE_EXTENSIONS, parse_resume_file
 
 router = APIRouter()
 
-ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".md", ".markdown"}
+ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".md", ".markdown"} | IMAGE_EXTENSIONS
 
 
-def _populate_resume_relations(resume: Resume, parsed_data: dict, db: AsyncSession, new: bool = False):
+async def _populate_resume_relations(
+    resume: Resume, parsed_data: dict, db: AsyncSession, new: bool = False
+):
     """从 AI 解析结果填充关联表，直接操作外键避免懒加载。"""
     if not new:
         # 重新分析时手动删除旧数据（不使用 .clear() 避免懒加载）
-        for rel in [resume.skills, resume.educations, resume.work_experiences, resume.projects, resume.certificates]:
+        for rel in [
+            resume.skills,
+            resume.educations,
+            resume.work_experiences,
+            resume.projects,
+            resume.certificates,
+        ]:
             for item in list(rel):
-                db.delete(item)
+                await db.delete(item)
+        await db.flush()
 
     for s in parsed_data.get("skills", []):
         if s.get("name"):
-            db.add(Skill(resume_id=resume.id, name=s["name"], level=s.get("level"), category=s.get("category")))
+            db.add(
+                Skill(
+                    resume_id=resume.id,
+                    name=s["name"],
+                    level=s.get("level"),
+                    category=s.get("category"),
+                )
+            )
 
     for e in parsed_data.get("educations", []):
         if e.get("school"):
-            db.add(Education(
-                resume_id=resume.id, school=e["school"], degree=e.get("degree"), field=e.get("field"),
-                start_date=_parse_date(e.get("start_date")), end_date=_parse_date(e.get("end_date")),
-                description=e.get("description"),
-            ))
+            db.add(
+                Education(
+                    resume_id=resume.id,
+                    school=e["school"],
+                    degree=e.get("degree"),
+                    field=e.get("field"),
+                    start_date=_parse_date(e.get("start_date")),
+                    end_date=_parse_date(e.get("end_date")),
+                    description=e.get("description"),
+                )
+            )
 
     for w in parsed_data.get("work_experiences", []):
         if w.get("company") and w.get("title"):
-            db.add(WorkExperience(
-                resume_id=resume.id, company=w["company"], title=w["title"], description=w.get("description"),
-                start_date=_parse_date(w.get("start_date")), end_date=_parse_date(w.get("end_date")),
-                is_current=w.get("is_current", False),
-            ))
+            db.add(
+                WorkExperience(
+                    resume_id=resume.id,
+                    company=w["company"],
+                    title=w["title"],
+                    description=w.get("description"),
+                    start_date=_parse_date(w.get("start_date")),
+                    end_date=_parse_date(w.get("end_date")),
+                    is_current=w.get("is_current", False),
+                )
+            )
 
     for p in parsed_data.get("projects", []):
         if p.get("name"):
-            db.add(Project(
-                resume_id=resume.id, name=p["name"], role=p.get("role"), description=p.get("description"),
-                tech_stack=p.get("tech_stack", []),
-                start_date=_parse_date(p.get("start_date")), end_date=_parse_date(p.get("end_date")),
-            ))
+            db.add(
+                Project(
+                    resume_id=resume.id,
+                    name=p["name"],
+                    role=p.get("role"),
+                    description=p.get("description"),
+                    tech_stack=p.get("tech_stack", []),
+                    start_date=_parse_date(p.get("start_date")),
+                    end_date=_parse_date(p.get("end_date")),
+                )
+            )
 
 
 def _parse_date(s: str | None):
@@ -78,6 +114,7 @@ def _parse_date(s: str | None):
         return None
     try:
         from datetime import date
+
         m = re.match(r"(\d{4})-(\d{2})", s)
         if m:
             return date(int(m.group(1)), int(m.group(2)), 1)
@@ -98,11 +135,17 @@ async def upload_resume(
     """上传简历文件（PDF/DOCX/TXT）进行解析。"""
     logger.info(
         "Resume upload by user_id={}: filename={}, size={}, type={}",
-        current_user.id, file.filename, file.size, file.content_type,
+        current_user.id,
+        file.filename,
+        file.size,
+        file.content_type,
     )
 
     # 校验文件扩展名
-    ext = os.path.splitext(file.filename or "")[1].lower()
+    filename = (file.filename or "untitled").replace("\\", "/").rsplit("/", 1)[-1]
+    if len(filename) > 255 or any(ord(char) < 32 for char in filename):
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    ext = os.path.splitext(filename)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -110,31 +153,35 @@ async def upload_resume(
         )
 
     # 校验文件大小
-    contents = await file.read()
+    contents = await file.read(settings.MAX_UPLOAD_SIZE + 1)
     if len(contents) > settings.MAX_UPLOAD_SIZE:
         raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"File too large. Maximum size is {settings.MAX_UPLOAD_SIZE // (1024*1024)} MB",
+            status_code=413,
+            detail="File too large. Maximum size is "
+            f"{settings.MAX_UPLOAD_SIZE // (1024 * 1024)} MB",
         )
 
     # 将文件保存到磁盘
     upload_dir = settings.UPLOAD_DIR
     os.makedirs(upload_dir, exist_ok=True)
-    file_path = os.path.join(upload_dir, f"{current_user.id}_{file.filename}")
-    with open(file_path, "wb") as f:
+    file_path = str(Path(upload_dir).resolve() / f"{uuid4().hex}{ext}")
+    with open(file_path, "xb") as f:
         f.write(contents)
 
     # 解析文件
     try:
-        raw_text = parse_resume_file(file_path, ext)
+        raw_text = await run_in_threadpool(parse_resume_file, file_path, ext)
         status_ = ResumeStatus.PARSED
     except Exception as e:
-        logger.error("Resume parse failed for user_id={}, filename={}: {}", current_user.id, file.filename, e)
-        raw_text = None
-        status_ = ResumeStatus.FAILED
+        logger.error(
+            "Resume parse failed for user_id={}, filename={}: {}", current_user.id, file.filename, e
+        )
+        Path(file_path).unlink(missing_ok=True)
+        raise HTTPException(status_code=422, detail="简历解析失败：" + str(e)) from e
 
     # AI 智能解析（异步，失败不影响上传）
     parsed_data = None
+    ai_error = None
     if raw_text and status_ == ResumeStatus.PARSED:
         api_key = settings.DEEPSEEK_API_KEY
         if not api_key:
@@ -145,15 +192,20 @@ async def upload_resume(
 
                 agent = ResumeAnalysisAgent()
                 parsed_data = await agent.run(resume_text=raw_text)
-                logger.info("AI resume analysis completed for user_id={}: {} skills, {}y exp",
-                            current_user.id, len(parsed_data.get("skills", [])), parsed_data.get("experience_years", 0))
+                logger.info(
+                    "AI resume analysis completed for user_id={}: {} skills, {}y exp",
+                    current_user.id,
+                    len(parsed_data.get("skills", [])),
+                    parsed_data.get("experience_years", 0),
+                )
             except Exception as e:
+                ai_error = "AI 服务暂时不可用，文字已保存，可稍后点击 AI 分析重试。"
                 logger.warning("AI resume analysis failed for user_id={}: {}", current_user.id, e)
 
     # 创建简历记录
     resume = Resume(
         user_id=current_user.id,
-        title=file.filename or "untitled",
+        title=filename,
         file_path=file_path,
         raw_text=raw_text,
         parsed_data=parsed_data,
@@ -164,21 +216,30 @@ async def upload_resume(
 
     # 填充关联表（新简历，无需清空）
     if parsed_data:
-        _populate_resume_relations(resume, parsed_data, db, new=True)
+        await _populate_resume_relations(resume, parsed_data, db, new=True)
         await db.flush()
 
     await db.refresh(resume)
 
     logger.info(
         "Resume uploaded by user_id={}: id={}, filename={}, status={}",
-        current_user.id, resume.id, resume.title, status_.value,
+        current_user.id,
+        resume.id,
+        resume.title,
+        status_.value,
     )
 
     return ResumeUploadResponse(
         id=resume.id,
         title=resume.title,
         status=resume.status.value,
-        message="Resume uploaded and parsed successfully." if status_ == ResumeStatus.PARSED
+        message=ai_error
+        or (
+            "图片文字识别及 AI 分析完成。"
+            if ext in IMAGE_EXTENSIONS and parsed_data
+            else "文字已识别并保存。"
+        )
+        if status_ == ResumeStatus.PARSED
         else "Resume uploaded but parsing failed.",
     )
 
@@ -188,14 +249,14 @@ async def list_resumes(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     q: str = Query("", description="按标题关键字搜索"),
-    status_filter: str | None = Query(None, alias="status", description="按状态过滤"),
+    status_filter: ResumeStatus | None = Query(None, alias="status", description="按状态过滤"),
 ):
     """列出当前用户的简历，支持搜索和状态过滤。"""
     stmt = select(Resume).where(Resume.user_id == current_user.id)
     if q:
-        stmt = stmt.where(Resume.title.ilike(f"%{q}%"))
+        stmt = stmt.where(Resume.title.ilike(f"%{q}%") | Resume.raw_text.ilike(f"%{q}%"))
     if status_filter:
-        stmt = stmt.where(Resume.status == ResumeStatus(status_filter))
+        stmt = stmt.where(Resume.status == status_filter)
     stmt = stmt.order_by(Resume.created_at.desc())
     result = await db.execute(stmt)
     resumes = result.scalars().all()
@@ -252,6 +313,11 @@ async def get_resume_file(
 
     ext = os.path.splitext(resume.file_path)[1].lower()
     media_types = {
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".webp": "image/webp",
+        ".bmp": "image/bmp",
         ".pdf": "application/pdf",
         ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         ".txt": "text/plain; charset=utf-8",
@@ -266,19 +332,24 @@ async def get_resume_file(
     if ext == ".docx" and not download:
         try:
             from app.services.resume_parser import _parse_docx
+
             text = _parse_docx(resume.file_path)
             html = f"""<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
-<title>{resume.title}</title>
-<style>body{{font-family:sans-serif;max-width:800px;margin:40px auto;padding:0 20px;line-height:1.8;white-space:pre-wrap;word-break:break-word}}
+<title>{escape(resume.title)}</title>
+<style>body{{font-family:sans-serif;max-width:800px;margin:40px auto;padding:0 20px;
+line-height:1.8;white-space:pre-wrap;word-break:break-word}}
 h1{{border-bottom:2px solid #2563eb;padding-bottom:8px;color:#1e293b}}</style>
-</head><body><h1>{resume.title}</h1><div>{'<br>'.join(text.split(chr(10)))}</div></body></html>"""
+</head><body><h1>{escape(resume.title)}</h1><div>{"<br>".join(escape(text).split(chr(10)))}</div></body></html>"""
             return HTMLResponse(content=html, status_code=200)
         except Exception as e:
             logger.warning("DOCX text preview failed: {}", e)
             # 降级为直接下载
-    return FileResponse(resume.file_path, filename=resume.title, media_type=media_type, headers={"Content-Disposition": disposition})
-
-    return FileResponse(resume.file_path, filename=resume.title, media_type=media_type, headers={"Content-Disposition": "inline"})
+    return FileResponse(
+        resume.file_path,
+        filename=resume.title,
+        media_type=media_type,
+        content_disposition_type=disposition,
+    )
 
 
 @router.put("/{resume_id}", response_model=ResumeResponse)
@@ -309,7 +380,17 @@ async def update_resume(
         setattr(resume, field, value)
 
     await db.flush()
-    await db.refresh(resume)
+    await db.refresh(
+        resume,
+        attribute_names=[
+            "updated_at",
+            "skills",
+            "educations",
+            "work_experiences",
+            "projects",
+            "certificates",
+        ],
+    )
     logger.info("Resume updated: id={}, user_id={}", resume_id, current_user.id)
     return resume
 
@@ -359,7 +440,9 @@ async def analyze_resume(
     if resume is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume not found")
     if not resume.raw_text:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Resume has no parseable text")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Resume has no parseable text"
+        )
 
     try:
         from app.agents.resume_agent import ResumeAnalysisAgent
@@ -367,12 +450,26 @@ async def analyze_resume(
         agent = ResumeAnalysisAgent()
         parsed_data = await agent.run(resume_text=resume.raw_text)
         resume.parsed_data = parsed_data
-        _populate_resume_relations(resume, parsed_data, db)
+        await _populate_resume_relations(resume, parsed_data, db)
         await db.flush()
-        await db.refresh(resume)
+        await db.refresh(
+            resume,
+            attribute_names=[
+                "updated_at",
+                "skills",
+                "educations",
+                "work_experiences",
+                "projects",
+                "certificates",
+            ],
+        )
         logger.info("Resume AI analysis completed: id={}, user_id={}", resume_id, current_user.id)
+    except AgentError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
     except Exception as e:
         logger.error("Resume AI analysis failed: id={}, error={}", resume_id, e)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"AI analysis failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"AI analysis failed: {e}"
+        )
 
     return resume

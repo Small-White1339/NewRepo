@@ -13,13 +13,19 @@ tasks:
       - backend:dev
       - frontend:dev
 
+  dev:
+    desc: 启动全部服务
+    deps:
+      - backend:dev
+      - frontend:dev
+
   # ── 后端 ──
 
   backend:install:
     desc: 安装后端依赖
     dir: "{{.BACKEND_DIR}}"
     cmds:
-      - uv sync
+      - uv sync --extra dev
 
   backend:dev:
     desc: 启动后端开发服务器（热重载）
@@ -35,13 +41,13 @@ tasks:
     desc: 运行 ruff 代码检查
     dir: "{{.BACKEND_DIR}}"
     cmds:
-      - uv run ruff check app/
-      - uv run ruff format app/ --check
+      - uv run --extra dev ruff check app/
+      - uv run --extra dev ruff format app/ --check
 
   backend:format:
     desc: 自动格式化代码
     dir: "{{.BACKEND_DIR}}"
-    cmd: uv run ruff format app/
+    cmd: uv run --extra dev ruff format app/
 
   backend:check:
     desc: 类型检查
@@ -51,7 +57,7 @@ tasks:
   backend:migrate:
     desc: 执行数据库迁移
     dir: "{{.BACKEND_DIR}}"
-    cmd: alembic upgrade head
+    cmd: uv run alembic upgrade head
 
   backend:migration:
     desc: 创建新的数据库迁移
@@ -62,12 +68,7 @@ tasks:
   backend:test:
     desc: 运行后端测试
     dir: "{{.BACKEND_DIR}}"
-    cmd: uv run pytest tests/
-
-  backend:seed:
-    desc: 初始化知识库种子数据
-    dir: "{{.BACKEND_DIR}}"
-    cmd: uv run python -c "import asyncio; from app.services.knowledge_base import knowledge_base; asyncio.run(knowledge_base.initialize()); print('Knowledge base initialized')"
+    cmd: uv run --extra dev pytest tests/
 
   backend:shell:
     desc: 打开 Python shell（带应用上下文）
@@ -80,7 +81,7 @@ tasks:
     desc: 安装前端依赖
     dir: "{{.FRONTEND_DIR}}"
     cmds:
-      - npm install
+      - npm ci
 
   frontend:dev:
     desc: 启动前端开发服务器

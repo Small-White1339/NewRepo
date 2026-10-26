@@ -1,18 +1,22 @@
-﻿"""所有 SmartHire Agent 的基类，集成 LLM。"""
+"""所有 SmartHire Agent 的基类，集成 LLM。"""
 
 import json
 import re
 from abc import ABC, abstractmethod
 from typing import Any
 
-from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableSequence
+from langchain_openai import ChatOpenAI
 from loguru import logger
 from pydantic import BaseModel, ValidationError
 
 from app.config import settings
+
+
+class AgentError(RuntimeError):
+    """AI 服务不可用或返回无效结果。"""
 
 
 class BaseAgent(ABC):
@@ -36,16 +40,18 @@ class BaseAgent(ABC):
         model = "deepseek-chat"
 
         if not api_key:
-            logger.warning(f"Agent '{self.name}': DeepSeek API key not set. Using stub mode.")
+            raise AgentError("尚未配置 DeepSeek API Key，请在后端环境配置中设置。")
 
         self._llm = ChatOpenAI(
             model=model,
-            api_key=api_key or "stub",
+            api_key=api_key,
             base_url=base_url,
             temperature=0.1,
             max_tokens=4096,
+            timeout=settings.LLM_TIMEOUT_SECONDS,
+            max_retries=1,
         )
-        logger.info(f"Agent '{self.name}' initialized with {provider} ({model})")
+        logger.info(f"Agent '{self.name}' initialized with DeepSeek ({model})")
         return self._llm
 
     async def _call_llm_structured(
@@ -58,10 +64,7 @@ class BaseAgent(ABC):
         enriched_prompt = user_prompt
 
         if not self._get_api_key():
-            logger.warning(f"Agent '{self.name}': No API key — returning stub.")
-            return output_schema()
-
-        llm = self._get_llm()
+            raise AgentError("尚未配置 DeepSeek API Key，请在后端环境配置中设置。")
 
         # 构建要求 JSON 输出的提示词
         schema_json = output_schema.model_json_schema()
@@ -69,7 +72,8 @@ class BaseAgent(ABC):
         json_prompt = (
             "你必须以 JSON 格式返回结果，严格遵循以下 JSON Schema：\n"
             f"{schema_str}\n\n"
-            f"请分析以下内容并按照上述 Schema 返回 JSON（不要包含 markdown 代码块标记）：\n\n{enriched_prompt}"
+            "请分析以下内容并按照上述 Schema 返回 JSON"
+            f"（不要包含 markdown 代码块标记）：\n\n{enriched_prompt}"
         )
         messages = [
             SystemMessage(content=self.system_prompt),
@@ -81,30 +85,28 @@ class BaseAgent(ABC):
             try:
                 llm = self._get_llm()
                 response = await llm.ainvoke(messages)
+                if not isinstance(response.content, str):
+                    raise ValueError("Expected a text response")
                 text = response.content.strip()
 
                 # 提取 JSON（兼容可能的 markdown 代码块）
                 json_str = text
-                for marker in ["```json", "```"]:
-                    if marker in text:
-                        parts = text.split(marker)
-                        if len(parts) >= 3:
-                            json_str = parts[1].strip()
-                        break
+                fenced = re.fullmatch(r"```(?:json)?\s*([\s\S]*?)\s*```", text)
+                if fenced:
+                    json_str = fenced.group(1)
 
                 parsed = json.loads(json_str)
                 result = output_schema.model_validate(parsed)
                 logger.debug(f"Agent '{self.name}' parsed structured output successfully")
                 return result
 
-            except (json.JSONDecodeError, ValidationError) as e:
+            except (ValueError, ValidationError) as e:
                 logger.warning(f"Agent '{self.name}' attempt {attempt + 1} - parse failed: {e}")
                 if attempt == 1:
-                    logger.error(f"Agent '{self.name}' returning fallback after 2 failures")
-                    return output_schema()
+                    raise AgentError("AI 返回的数据格式无效，请重试。") from e
             except Exception as e:
                 logger.error(f"Agent '{self.name}' LLM call failed: {e}")
-                return output_schema()
+                raise AgentError("AI 服务调用失败，请检查配置或稍后重试。") from e
 
     @abstractmethod
     async def run(self, **kwargs) -> dict[str, Any]:

@@ -9,17 +9,28 @@ from app.agents.base import BaseAgent
 
 # ── Structured Output Schema ──────────────────────────────────────────
 
+
 class SkillInfo(BaseModel):
     """Individual skill extracted from a resume."""
+
     name: str = Field(description="Skill name (e.g. 'Python', 'Project Management')")
-    level: str = Field(default="intermediate", description="Proficiency level: beginner / intermediate / advanced / expert")
-    category: str = Field(default="general", description="Skill category (e.g. programming_language, framework, tool, soft_skill)")
+    level: str = Field(
+        default="intermediate",
+        description="Proficiency level: beginner / intermediate / advanced / expert",
+    )
+    category: str = Field(
+        default="general",
+        description="Skill category (e.g. programming_language, framework, tool, soft_skill)",
+    )
 
 
 class EducationInfo(BaseModel):
     """Education entry extracted from resume."""
+
     school: str = Field(description="School or university name")
-    degree: str | None = Field(default=None, description="Degree: high_school / associate / bachelor / master / phd")
+    degree: str | None = Field(
+        default=None, description="Degree: high_school / associate / bachelor / master / phd"
+    )
     field: str | None = Field(default=None, description="Field of study")
     start_date: str | None = Field(default=None, description="Start date (e.g. '2018-09')")
     end_date: str | None = Field(default=None, description="End date (e.g. '2022-06')")
@@ -28,9 +39,12 @@ class EducationInfo(BaseModel):
 
 class WorkExperienceInfo(BaseModel):
     """Work experience entry extracted from resume."""
+
     company: str = Field(description="Company name")
     title: str = Field(description="Job title")
-    description: str | None = Field(default=None, description="Job description and responsibilities")
+    description: str | None = Field(
+        default=None, description="Job description and responsibilities"
+    )
     start_date: str | None = Field(default=None, description="Start date (e.g. '2020-03')")
     end_date: str | None = Field(default=None, description="End date or 'present'")
     is_current: bool = Field(default=False, description="Whether this is the current position")
@@ -38,6 +52,7 @@ class WorkExperienceInfo(BaseModel):
 
 class ProjectInfo(BaseModel):
     """Project entry extracted from resume."""
+
     name: str = Field(description="Project name")
     role: str | None = Field(default=None, description="Role in the project")
     description: str | None = Field(default=None, description="Project description")
@@ -48,16 +63,24 @@ class ProjectInfo(BaseModel):
 
 class ResumeAnalysisResult(BaseModel):
     """Complete structured output from resume analysis."""
+
     name: str = Field(default="未知", description="Candidate's full name (姓名)")
     phone: str | None = Field(default=None, description="Phone number (手机号)")
     email: str | None = Field(default=None, description="Email address (邮箱)")
     age: int | None = Field(default=None, description="Candidate's age in years (年龄)")
     summary: str = Field(description="One-paragraph overall summary of the candidate")
     skills: list[SkillInfo] = Field(default_factory=list, description="Extracted skills")
-    experience_years: float = Field(default=0.0, description="Total years of professional experience")
-    education_level: str = Field(default="unknown", description="Highest education: high_school/associate/bachelor/master/phd")
+    experience_years: float = Field(
+        default=0.0, description="Total years of professional experience"
+    )
+    education_level: str = Field(
+        default="unknown",
+        description="Highest education: high_school/associate/bachelor/master/phd",
+    )
     educations: list[EducationInfo] = Field(default_factory=list, description="Education history")
-    work_experiences: list[WorkExperienceInfo] = Field(default_factory=list, description="Work experience history")
+    work_experiences: list[WorkExperienceInfo] = Field(
+        default_factory=list, description="Work experience history"
+    )
     projects: list[ProjectInfo] = Field(default_factory=list, description="Project experience")
     strengths: list[str] = Field(default_factory=list, description="Key strengths of the candidate")
     weaknesses: list[str] = Field(default_factory=list, description="Potential gaps or weaknesses")
@@ -86,10 +109,12 @@ Analyze the resume text carefully and produce a structured assessment covering:
 12. Notable achievements and accomplishments
 
 Be objective and evidence-based. Base your analysis only on what is present in the resume text.
-IMPORTANT: All text output MUST be written in Simplified Chinese. Only technical terms may remain in English."""
+IMPORTANT: All text output MUST be written in Simplified Chinese.
+Only technical terms may remain in English."""
 
 
 # ── Agent Implementation ──────────────────────────────────────────────
+
 
 class ResumeAnalysisAgent(BaseAgent):
     """Agent responsible for analyzing resumes and extracting candidate capabilities."""

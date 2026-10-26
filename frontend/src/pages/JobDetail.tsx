@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getJob, analyzeJob, deleteJob } from '../api/jobs';
+import { getErrorMessage } from '../api/errors';
 import StatusBadge from '../components/StatusBadge';
+import SourceInfo from '../components/SourceInfo';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +23,7 @@ const JOB_LEVEL_LABELS: Record<string, string> = {
   INTERMEDIATE: '中级',
   SENIOR: '高级',
   EXPERT: '专家',
+  UNSPECIFIED: '以原始岗位说明为准',
 };
 
 export default function JobDetail() {
@@ -51,11 +54,12 @@ export default function JobDetail() {
   const handleAnalyze = async () => {
     if (!id) return;
     setAnalyzing(true);
+    setError('');
     try {
       await analyzeJob(id);
       await fetchJob();
-    } catch {
-      setError('AI 分析失败');
+    } catch (err) {
+      setError(getErrorMessage(err, 'AI 分析失败'));
     } finally {
       setAnalyzing(false);
     }
@@ -69,7 +73,7 @@ export default function JobDetail() {
     );
   }
 
-  if (error || !job) {
+  if (!job) {
     return (
       <div className="flex flex-col items-center gap-4 py-12">
         <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
@@ -122,6 +126,7 @@ export default function JobDetail() {
           </CardHeader>
           <CardContent className="flex flex-col gap-2 text-sm">
             <p><span className="font-medium">岗位名称：</span>{job.title}</p>
+            <SourceInfo name={job.source_name} url={job.source_url} importedAt={job.imported_at} />
             <p><span className="font-medium">公司：</span>{job.company}</p>
             <p><span className="font-medium">职级：</span>{JOB_LEVEL_LABELS[job.level] || job.level}</p>
             <p><span className="font-medium">状态：</span>

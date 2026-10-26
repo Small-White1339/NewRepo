@@ -1,7 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { createJob, listJobs, updateJob, deleteJob } from '../api/jobs';
+import { createJob, getJob, listJobs, updateJob, deleteJob } from '../api/jobs';
 import StatusBadge from '../components/StatusBadge';
+import SourceInfo from '../components/SourceInfo';
+import { importPublicData } from '../api/imports';
+import { getErrorMessage } from '../api/errors';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,7 +21,7 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader,
   AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
-import { Briefcase, Plus, Trash2, Pencil } from 'lucide-react';
+import { Briefcase, Plus, Trash2, Pencil, Globe } from 'lucide-react';
 import type { JobListItem, JobLevel, JobStatus } from '../types';
 
 const JOB_LEVELS: Record<JobLevel, string> = {
@@ -26,6 +29,7 @@ const JOB_LEVELS: Record<JobLevel, string> = {
   INTERMEDIATE: '中级',
   SENIOR: '高级',
   EXPERT: '专家',
+  UNSPECIFIED: '以原始岗位说明为准',
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -35,6 +39,10 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function Jobs() {
+  const [importing, setImporting] = useState(false);
+  const [notice, setNotice] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [levelFilter, setLevelFilter] = useState('ALL');
   const [jobs, setJobs] = useState<JobListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -51,8 +59,10 @@ export default function Jobs() {
 
   const fetchJobs = async () => {
     try {
-      const params: { q?: string } = {};
+      const params: { q?: string; status?: string; level?: string } = {};
       if (searchQuery) params.q = searchQuery;
+      if (statusFilter !== 'ALL') params.status = statusFilter;
+      if (levelFilter !== 'ALL') params.level = levelFilter;
       const data = await listJobs(params);
       setJobs(data);
     } catch {
@@ -64,7 +74,7 @@ export default function Jobs() {
 
   useEffect(() => {
     fetchJobs();
-  }, [searchQuery]);
+  }, [searchQuery, statusFilter, levelFilter]);
 
   const handleCreate = async (e: FormEvent) => {
     e.preventDefault();
@@ -91,7 +101,7 @@ export default function Jobs() {
   const handleEditSubmit = async () => {
     if (!editingJob) return;
     try {
-      await updateJob(editingJob.id, { title: editForm.title, company: editForm.company, level: editForm.level as JobLevel, status: editForm.status as JobStatus });
+      await updateJob(editingJob.id, { title: editForm.title, company: editForm.company, level: editForm.level as JobLevel, status: editForm.status as JobStatus, raw_description: editForm.raw_description });
       setEditingJob(null);
       await fetchJobs();
     } catch {
@@ -111,15 +121,24 @@ export default function Jobs() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap gap-3 items-center justify-between">
         <h2 className="text-2xl font-bold text-foreground">岗位管理</h2>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Input
             placeholder="搜索岗位..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-48"
           />
+          <Button variant="outline" disabled={importing} onClick={async () => {
+            setImporting(true); setError(''); setNotice('');
+            try {
+              const result = await importPublicData('jobs');
+              setNotice(`新增 ${result.created} 条真实岗位，更新 ${result.updated} 条。${result.errors.join(' ')}`);
+              await fetchJobs();
+            } catch (err) { setError(getErrorMessage(err, '真实岗位导入失败')); }
+            finally { setImporting(false); }
+          }}><Globe data-icon="inline-start" />{importing ? '正在获取真实岗位...' : '同步真实岗位'}</Button>
           <Button
             variant={showForm ? 'outline' : 'default'}
             onClick={() => setShowForm(!showForm)}
@@ -128,6 +147,19 @@ export default function Jobs() {
           </Button>
         </div>
       </div>
+
+      <div className="flex flex-wrap gap-3 items-center text-sm text-muted-foreground">
+        <span>共 {jobs.length} 条岗位；真实岗位保留企业原文，是否仍在招聘请查看原始页面。</span>
+        <Select value={statusFilter} onValueChange={(v) => v && setStatusFilter(v)}>
+          <SelectTrigger>{statusFilter === 'ALL' ? '全部状态' : STATUS_LABELS[statusFilter]}</SelectTrigger>
+          <SelectContent><SelectItem value="ALL">全部状态</SelectItem>{Object.entries(STATUS_LABELS).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent>
+        </Select>
+        <Select value={levelFilter} onValueChange={(v) => v && setLevelFilter(v)}>
+          <SelectTrigger>{levelFilter === 'ALL' ? '全部职级' : JOB_LEVELS[levelFilter as JobLevel]}</SelectTrigger>
+          <SelectContent><SelectItem value="ALL">全部职级</SelectItem>{Object.entries(JOB_LEVELS).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      {notice && <p role="status" className="text-sm text-primary">{notice}</p>}
 
       {error && (
         <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
@@ -232,7 +264,7 @@ export default function Jobs() {
           <TableBody>
             {jobs.map((job) => (
               <TableRow key={job.id}>
-                <TableCell className="font-medium">{job.title}</TableCell>
+                <TableCell className="font-medium">{job.title}<SourceInfo name={job.source_name} url={job.source_url} importedAt={job.imported_at} /></TableCell>
                 <TableCell className="text-muted-foreground">{job.company}</TableCell>
                 <TableCell>
                   <span className="text-sm text-muted-foreground">{JOB_LEVELS[job.level] || job.level}</span>
@@ -249,13 +281,11 @@ export default function Jobs() {
                     <Button
                       variant="ghost" size="sm"
                       onClick={async () => {
-                        setEditForm({ title: job.title, company: job.company, level: job.level, status: job.status, raw_description: '' });
-                        setEditingJob(job);
                         try {
-                          const { getJob } = await import('../api/jobs');
                           const detail = await getJob(job.id);
                           setEditForm({ title: detail.title, company: detail.company, level: detail.level, status: detail.status, raw_description: detail.raw_description || '' });
-                        } catch {}
+                          setEditingJob(job);
+                        } catch { setError('加载岗位详情失败'); }
                       }}
                     >
                       <Pencil className="size-4" />

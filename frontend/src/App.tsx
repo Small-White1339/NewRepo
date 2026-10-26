@@ -11,6 +11,9 @@ import Jobs from './pages/Jobs';
 import JobDetail from './pages/JobDetail';
 import Matches from './pages/Matches';
 import MatchDetail from './pages/MatchDetail';
+import CareerJobs from './pages/CareerJobs';
+import CareerJobDetail from './pages/CareerJobDetail';
+import Career from './pages/Career';
 import { Toaster } from '@/components/ui/sonner';
 
 export default function App() {
@@ -25,10 +28,17 @@ export default function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/resumes" element={<Resumes />} />
               <Route path="/resumes/:id" element={<ResumeDetail />} />
-              <Route path="/jobs" element={<Jobs />} />
-              <Route path="/jobs/:id" element={<JobDetail />} />
-              <Route path="/matches" element={<Matches />} />
-              <Route path="/matches/:id" element={<MatchDetail />} />
+              <Route element={<ProtectedRoute seekerOnly />}>
+                <Route path="/opportunities" element={<CareerJobs />} />
+                <Route path="/opportunities/:id" element={<CareerJobDetail />} />
+                <Route path="/career" element={<Career />} />
+              </Route>
+              <Route element={<ProtectedRoute hrOnly />}>
+                <Route path="/jobs" element={<Jobs />} />
+                <Route path="/jobs/:id" element={<JobDetail />} />
+                <Route path="/matches" element={<Matches />} />
+                <Route path="/matches/:id" element={<MatchDetail />} />
+              </Route>
             </Route>
           </Route>
         </Routes>

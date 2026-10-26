@@ -1,6 +1,10 @@
 import { useEffect, useState, useRef, type ChangeEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { listResumes, uploadResume, deleteResume } from '../api/resumes';
+import { importPublicData } from '../api/imports';
+import { getErrorMessage } from '../api/errors';
+import SourceInfo from '../components/SourceInfo';
+import { useAuth } from '../hooks/useAuth';
 import StatusBadge from '../components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,10 +17,13 @@ import {
   AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader,
   AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
-import { FileText, Upload, Trash2, Search, Eye, Download } from 'lucide-react';
+import { FileText, Upload, Trash2, Search, Eye, Download, ImagePlus, Globe } from 'lucide-react';
 import type { ResumeListItem } from '../types';
 
 export default function Resumes() {
+  const { isHR } = useAuth();
+  const [importing, setImporting] = useState(false);
+  const [notice, setNotice] = useState('');
   const [resumes, setResumes] = useState<ResumeListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -24,6 +31,7 @@ export default function Resumes() {
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<ResumeListItem | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const fetchResumes = async () => {
     try {
@@ -48,8 +56,9 @@ export default function Resumes() {
     setUploading(true);
     setError('');
     try {
-      await uploadResume(file);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      const result = await uploadResume(file);
+      setNotice(result.message);
+      e.target.value = '';
       await fetchResumes();
     } catch (err: unknown) {
       const msg =
@@ -75,11 +84,11 @@ export default function Resumes() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-foreground">简历管理</h2>
-        <div className="flex gap-2">
+      <div className="flex flex-wrap gap-3 items-center justify-between">
+        <h2 className="text-2xl font-bold text-foreground">{isHR ? '简历管理' : '我的简历'}</h2>
+        <div className="flex flex-wrap gap-2">
           <Input
-            placeholder="搜索简历..."
+            placeholder="搜索姓名、技能或经历..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-48"
@@ -87,15 +96,33 @@ export default function Resumes() {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".pdf,.docx,.txt,.md"
+            accept=".pdf,.docx,.txt,.md,.markdown,.jpg,.jpeg,.png,.webp,.bmp"
             className="hidden"
             onChange={handleFileChange}
           />
           <Button disabled={uploading} onClick={() => fileInputRef.current?.click()}>
             {uploading ? <><Spinner data-icon="inline-start" />上传中...</> : <><Upload data-icon="inline-start" />上传简历</>}
           </Button>
+          <input ref={imageInputRef} type="file" accept=".jpg,.jpeg,.png,.webp,.bmp" className="hidden" onChange={handleFileChange} />
+          <Button variant="outline" disabled={uploading} onClick={() => imageInputRef.current?.click()}>
+            <ImagePlus data-icon="inline-start" />上传简历照片
+          </Button>
+          {isHR && <Button variant="outline" disabled={importing} onClick={async () => {
+            setImporting(true); setError(''); setNotice('');
+            try {
+              const result = await importPublicData('resumes');
+              setNotice(`新增 ${result.created} 份公开简历，跳过 ${result.skipped} 份重复资料。${result.errors.join(' ')}`);
+              await fetchResumes();
+            } catch (err) { setError(getErrorMessage(err, '公开简历导入失败')); }
+            finally { setImporting(false); }
+          }}><Globe data-icon="inline-start" />{importing ? '正在获取公开简历...' : '导入公开简历'}</Button>}
         </div>
       </div>
+
+      <p className="text-sm text-muted-foreground">共 {resumes.length} 份简历。支持 PDF、Word、文本及 JPG / PNG / WEBP / BMP 照片。照片自动识别中英文文字，再提取简历信息。</p>
+      {isHR ? <p className="text-xs text-muted-foreground">公开简历保留本人发布的职业经历及来源，已移除联系方式，仅作筛选参考，不代表本人正在求职或向本平台投递。</p>
+        : <p className="text-sm text-muted-foreground">你的简历仅供自己管理与分析。上传后可前往 <Link to="/opportunities" className="text-primary underline">岗位探索</Link>，查看匹配度与改进建议。</p>}
+      {notice && <p role="status" className="text-sm text-primary">{notice}</p>}
 
       {error && (
         <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
@@ -135,6 +162,7 @@ export default function Resumes() {
                     <FileText className="size-4 text-muted-foreground" />
                     {resume.title}
                   </div>
+                  <SourceInfo name={resume.source_name} url={resume.source_url} importedAt={resume.imported_at} />
                 </TableCell>
                 <TableCell><StatusBadge status={resume.status} /></TableCell>
                 <TableCell className="text-sm text-muted-foreground">

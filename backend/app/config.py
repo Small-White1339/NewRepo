@@ -1,8 +1,9 @@
-﻿"""通过 pydantic-settings 的应用配置。"""
+"""通过 pydantic-settings 的应用配置。"""
 
 from pathlib import Path
 
 from loguru import logger
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -22,6 +23,9 @@ class Settings(BaseSettings):
 
     DEEPSEEK_API_KEY: str = ""
     DEEPSEEK_API_BASE: str = "https://api.deepseek.com/v1"
+    LLM_TIMEOUT_SECONDS: float = Field(default=60.0, gt=0)
+    MATCH_CONCURRENCY: int = Field(default=3, ge=1, le=20)
+    SEED_ADMIN: bool = False
 
     APP_NAME: str = "SmartHire"
     DEBUG: bool = False
@@ -36,7 +40,6 @@ settings = Settings()
 
 logger.info("Settings loaded from env file and defaults")
 
-_masked_secret = (settings.SECRET_KEY[:4] + "****") if len(settings.SECRET_KEY) > 4 else "****"
 _masked_db_url = "****"
 if "://" in settings.DATABASE_URL and "@" in settings.DATABASE_URL:
     scheme, rest = settings.DATABASE_URL.split("://", 1)
@@ -44,7 +47,6 @@ if "://" in settings.DATABASE_URL and "@" in settings.DATABASE_URL:
     if ":" in userinfo:
         userinfo = userinfo.split(":")[0] + ":****"
     _masked_db_url = f"{scheme}://{userinfo}@{host}"
-logger.debug("Key settings: SECRET_KEY={}, DATABASE_URL={}, DEBUG={}",
-             _masked_secret, _masked_db_url, settings.DEBUG)
+logger.debug("Key settings: DATABASE_URL={}, DEBUG={}", _masked_db_url, settings.DEBUG)
 
 Path(settings.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)

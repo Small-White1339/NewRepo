@@ -3,10 +3,12 @@
 frontend/node_modules/
 frontend/dist/
 frontend/tsconfig.tsbuildinfo
-frontend/package-lock.json
+frontend/.npm-cache/
+.local-run/
 
 # Python
-backend/uv.lock
+backend/.venv/
+backend/.uv-cache/
 __pycache__/
 *.pyc
 
@@ -26,7 +28,11 @@ Thumbs.db
 __pycache__/
 *.pyc
 *.pyo
-backend/uv.lock
+.pytest_cache/
+.pytest-tmp/
+.test-uploads/
+.ruff_cache/
+*.egg-info/
 
 # Local database
 backend/*.db

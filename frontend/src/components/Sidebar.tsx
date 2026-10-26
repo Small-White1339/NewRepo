@@ -1,10 +1,12 @@
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
 import {
   LayoutDashboard,
   FileText,
   Briefcase,
   Target,
+  Bookmark,
 } from 'lucide-react';
 
 const navItems = [
@@ -14,12 +16,20 @@ const navItems = [
   { to: '/matches', label: '匹配分析', icon: Target },
 ];
 
+const seekerItems = [
+  { to: '/', label: '求职概览', icon: LayoutDashboard },
+  { to: '/resumes', label: '我的简历', icon: FileText },
+  { to: '/opportunities', label: '岗位探索', icon: Briefcase },
+  { to: '/career', label: '我的求职', icon: Bookmark },
+];
+
 interface SidebarProps {
   isOpen: boolean;
   onClose?: () => void;
 }
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
+  const { isHR } = useAuth();
   return (
     <aside className="flex h-full flex-col gap-2 border-r bg-sidebar p-3">
       <div className="flex items-center gap-2 px-2 py-3">
@@ -29,7 +39,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         <span className="text-base font-semibold text-sidebar-foreground">SmartHire</span>
       </div>
       <nav className="flex flex-col gap-1">
-        {navItems.map((item) => (
+        {(isHR ? navItems : seekerItems).map((item) => (
           <NavLink
             key={item.to}
             to={item.to}

@@ -7,8 +7,10 @@ from pydantic import BaseModel
 
 # ---------- Sub-model Schemas ----------
 
+
 class EducationSchema(BaseModel):
     """Education entry."""
+
     id: int | None = None
     school: str
     degree: str | None = None
@@ -22,6 +24,7 @@ class EducationSchema(BaseModel):
 
 class SkillSchema(BaseModel):
     """Skill entry."""
+
     id: int | None = None
     name: str
     level: str | None = None
@@ -32,6 +35,7 @@ class SkillSchema(BaseModel):
 
 class ProjectSchema(BaseModel):
     """Project entry."""
+
     id: int | None = None
     name: str
     role: str | None = None
@@ -46,6 +50,7 @@ class ProjectSchema(BaseModel):
 
 class WorkExperienceSchema(BaseModel):
     """Work experience entry."""
+
     id: int | None = None
     company: str
     title: str
@@ -59,6 +64,7 @@ class WorkExperienceSchema(BaseModel):
 
 class CertificateSchema(BaseModel):
     """Certificate entry."""
+
     id: int | None = None
     name: str
     issuer: str | None = None
@@ -70,8 +76,10 @@ class CertificateSchema(BaseModel):
 
 # ---------- Request Schemas ----------
 
+
 class ResumeUploadResponse(BaseModel):
     """Response after uploading a resume."""
+
     id: UUID
     title: str
     status: str
@@ -82,16 +90,22 @@ class ResumeUploadResponse(BaseModel):
 
 class ResumeUpdateRequest(BaseModel):
     """Request to update resume metadata."""
+
     title: str | None = None
 
 
 # ---------- Response Schemas ----------
 
+
 class ResumeResponse(BaseModel):
     """Full resume detail response."""
+
     id: UUID
     user_id: UUID
     title: str
+    source_name: str | None = None
+    source_url: str | None = None
+    imported_at: datetime | None = None
     file_path: str
     raw_text: str | None = None
     parsed_data: dict | None = None
@@ -109,8 +123,12 @@ class ResumeResponse(BaseModel):
 
 class ResumeListItem(BaseModel):
     """Resume list item (summary)."""
+
     id: UUID
     title: str
+    source_name: str | None = None
+    source_url: str | None = None
+    imported_at: datetime | None = None
     status: str
     created_at: datetime
 

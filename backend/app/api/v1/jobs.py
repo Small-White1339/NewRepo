@@ -8,7 +8,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.deps import get_current_user, get_db
+from app.agents.base import AgentError
+from app.api.deps import get_current_hr, get_current_user, get_db
 from app.models.job import Job, JobLevel, JobRequirement, JobStatus, RequirementCategory
 from app.models.user import User
 from app.schemas.job import (
@@ -25,7 +26,7 @@ router = APIRouter()
 async def create_job(
     body: JobCreateRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_hr),
 ):
     """创建新的职位发布，包含原始描述。"""
     job = Job(
@@ -51,17 +52,21 @@ async def list_jobs(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     q: str = Query("", description="按标题/公司关键字搜索"),
-    status_filter: str | None = Query(None, alias="status", description="按状态过滤"),
-    level_filter: str | None = Query(None, alias="level", description="按职级过滤"),
+    status_filter: JobStatus | None = Query(None, alias="status", description="按状态过滤"),
+    level_filter: JobLevel | None = Query(None, alias="level", description="按职级过滤"),
 ):
     """列出当前用户的职位，支持搜索和过滤。"""
     stmt = select(Job).where(Job.user_id == current_user.id)
     if q:
-        stmt = stmt.where(Job.title.ilike(f"%{q}%") | Job.company.ilike(f"%{q}%"))
+        stmt = stmt.where(
+            Job.title.ilike(f"%{q}%")
+            | Job.company.ilike(f"%{q}%")
+            | Job.raw_description.ilike(f"%{q}%")
+        )
     if status_filter:
-        stmt = stmt.where(Job.status == JobStatus(status_filter))
+        stmt = stmt.where(Job.status == status_filter)
     if level_filter:
-        stmt = stmt.where(Job.level == JobLevel(level_filter))
+        stmt = stmt.where(Job.level == level_filter)
     stmt = stmt.order_by(Job.created_at.desc())
     result = await db.execute(stmt)
     jobs = result.scalars().all()
@@ -94,7 +99,7 @@ async def update_job(
     job_id: UUID,
     body: JobUpdateRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_hr),
 ):
     """更新职位发布详情。"""
     result = await db.execute(
@@ -110,6 +115,8 @@ async def update_job(
         )
 
     update_data = body.model_dump(exclude_unset=True)
+    if any(update_data.get(field, "") is None for field in ["title", "company", "level", "status"]):
+        raise HTTPException(status_code=422, detail="岗位名称、公司、职级和状态不能为 null。")
     for field, value in update_data.items():
         setattr(job, field, value)
 
@@ -125,7 +132,7 @@ async def update_job(
 async def analyze_job(
     job_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_hr),
 ):
     """使用 JobAnalysisAgent 分析职位描述并存储结构化数据。"""
     result = await db.execute(
@@ -155,7 +162,9 @@ async def analyze_job(
 
         # 将结构化要求转换为 JobRequirement 记录
         # 先清除旧要求（重新分析时）
-        job.requirements.clear()
+        for requirement in list(job.requirements):
+            await db.delete(requirement)
+        await db.flush()
 
         for skill in structured_data.get("required_skills", []):
             req = JobRequirement(
@@ -210,9 +219,14 @@ async def analyze_job(
             db.add(req)
 
         await db.flush()
-        logger.info(f"Job {job_id} analyzed successfully: {len(structured_data.get('required_skills', []))} skills, "
-                    f"{len(structured_data.get('mandatory_requirements', []))} mandatory, "
-                    f"{len(structured_data.get('nice_to_have', []))} nice-to-have")
+        logger.info(
+            f"Job {job_id} analyzed successfully: "
+            f"{len(structured_data.get('required_skills', []))} skills, "
+            f"{len(structured_data.get('mandatory_requirements', []))} mandatory, "
+            f"{len(structured_data.get('nice_to_have', []))} nice-to-have"
+        )
+    except AgentError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Failed to analyze job {job_id}: {e}")
         raise HTTPException(
@@ -225,6 +239,7 @@ async def analyze_job(
         select(Job)
         .options(selectinload(Job.requirements))
         .where(Job.id == job_id)
+        .execution_options(populate_existing=True)
     )
     return result.scalar_one()
 
@@ -233,12 +248,10 @@ async def analyze_job(
 async def delete_job(
     job_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_hr),
 ):
     """删除职位及关联要求。"""
-    result = await db.execute(
-        select(Job).where(Job.id == job_id, Job.user_id == current_user.id)
-    )
+    result = await db.execute(select(Job).where(Job.id == job_id, Job.user_id == current_user.id))
     job = result.scalar_one_or_none()
     if job is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")

@@ -8,7 +8,8 @@ from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_current_hr, get_current_user, get_db
+from app.config import settings
 from app.models.job import Job
 from app.models.match import MatchReport, MatchStatus
 from app.models.resume import Resume
@@ -22,13 +23,17 @@ from app.schemas.match import (
 router = APIRouter()
 
 
-@router.post("/analyze", response_model=list[MatchReportResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/analyze", response_model=list[MatchReportResponse], status_code=status.HTTP_201_CREATED
+)
 async def analyze_match(
     body: MatchAnalyzeRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_hr),
 ):
     """使用多 Agent 流水线批量分析多个简历与职位的匹配。"""
+    if not settings.DEEPSEEK_API_KEY:
+        raise HTTPException(status_code=503, detail="尚未配置 DeepSeek API Key。")
     # 1. 验证职位所有权和描述（只需一次）
     result = await db.execute(
         select(Job).where(
@@ -51,7 +56,7 @@ async def analyze_match(
     # 2. 验证简历所有权和文本内容（过滤无效简历，不中止整个批次）
     valid_resumes: list[Resume] = []
     skipped: list[dict] = []
-    for resume_id in body.resume_ids:
+    for resume_id in dict.fromkeys(body.resume_ids):
         result = await db.execute(
             select(Resume).where(
                 Resume.id == resume_id,
@@ -95,15 +100,18 @@ async def analyze_match(
         await db.refresh(report)
 
     # 4. 并行运行多 Agent 流水线（每个简历独立执行）
+    semaphore = asyncio.Semaphore(settings.MATCH_CONCURRENCY)
+
     async def _run_pipeline(report: MatchReport, resume: Resume):
         try:
             from app.agents.orchestrator import orchestrator
 
             logger.info(f"Starting agent pipeline for match {report.id} (resume={resume.id})")
-            result_data = await orchestrator.analyze(
-                resume_text=resume.raw_text,
-                job_description=job.raw_description,
-            )
+            async with semaphore:
+                result_data = await orchestrator.analyze(
+                    resume_text=resume.raw_text,
+                    job_description=job.raw_description,
+                )
 
             report.overall_score = result_data.overall_score
             report.result_data = result_data.to_dict()
@@ -118,7 +126,9 @@ async def analyze_match(
             report.status = MatchStatus.FAILED
             report.result_data = {"error": str(e)}
 
-    await asyncio.gather(*[_run_pipeline(report, resume) for report, resume in zip(reports, valid_resumes)])
+    await asyncio.gather(
+        *[_run_pipeline(report, resume) for report, resume in zip(reports, valid_resumes)]
+    )
 
     # 5. 持久化所有更新并返回
     await db.flush()

@@ -18,6 +18,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         variant="ghost"
         size="icon"
         className="lg:hidden"
+        aria-label="打开导航菜单"
         onClick={onToggleSidebar}
       >
         <Menu className="size-5" />

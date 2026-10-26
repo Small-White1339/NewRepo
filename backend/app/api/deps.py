@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.database import get_db
-from app.models.user import User
+from app.models.user import User, UserRole
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -39,7 +39,9 @@ async def get_current_user(
         user_id_str: str | None = payload.get("sub")
         token_type: str | None = payload.get("type")
         if user_id_str is None or token_type != "access":
-            logger.warning("Authentication failed: invalid token payload (missing sub or wrong type)")
+            logger.warning(
+                "Authentication failed: invalid token payload (missing sub or wrong type)"
+            )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token",
@@ -63,6 +65,20 @@ async def get_current_user(
         )
     logger.debug("User authenticated: user_id={}, username={}", user.id, user.username)
     return user
+
+
+async def get_current_hr(current_user: User = Depends(get_current_user)) -> User:
+    """招聘业务写操作仅允许 HR 角色。"""
+    if current_user.role != UserRole.HR:
+        raise HTTPException(status_code=403, detail="此操作仅限招聘人员。")
+    return current_user
+
+
+async def get_current_job_seeker(current_user: User = Depends(get_current_user)) -> User:
+    """求职功能仅允许求职者账号访问。"""
+    if current_user.role != UserRole.JOB_SEEKER:
+        raise HTTPException(status_code=403, detail="请使用求职者账号访问。")
+    return current_user
 
 
 async def get_optional_user(
